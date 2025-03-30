@@ -5,9 +5,10 @@ import { ExternalLink } from 'lucide-react';
 interface LinkItemProps {
   link: LinkType;
   className?: string;
+  icon?: React.ReactNode;
 }
 
-const LinkItem = ({ link, className = '' }: LinkItemProps) => {
+const LinkItem = ({ link, className = '', icon }: LinkItemProps) => {
   return (
     <a 
       href={link.url} 
@@ -15,6 +16,7 @@ const LinkItem = ({ link, className = '' }: LinkItemProps) => {
       rel="noopener noreferrer"
       className={`link-card ${className}`}
     >
+      {icon && <span className="mr-2">{icon}</span>}
       {link.title}
       <ExternalLink size={16} className="ml-1" />
     </a>

@@ -17,6 +17,7 @@ export interface Database {
           display_name: string | null
           bio: string | null
           avatar: string | null
+          background_image: string | null
           theme: string | null
           created_at: string
           updated_at: string
@@ -27,6 +28,7 @@ export interface Database {
           display_name?: string | null
           bio?: string | null
           avatar?: string | null
+          background_image?: string | null
           theme?: string | null
           created_at?: string
           updated_at?: string
@@ -37,6 +39,7 @@ export interface Database {
           display_name?: string | null
           bio?: string | null
           avatar?: string | null
+          background_image?: string | null
           theme?: string | null
           created_at?: string
           updated_at?: string

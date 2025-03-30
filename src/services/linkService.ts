@@ -16,6 +16,7 @@ export interface UserProfile {
   displayName: string;
   bio: string;
   avatar: string;
+  backgroundImage: string;
   links: Link[];
   theme: string;
 }
@@ -50,6 +51,7 @@ export const getOrCreateProfile = async (userId: string, defaultUsername?: strin
       displayName: profile.display_name || profile.username,
       bio: profile.bio || 'Welcome to my links page!',
       avatar: profile.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.username}`,
+      backgroundImage: profile.background_image || '',
       links: links || [],
       theme: profile.theme || 'default',
     };
@@ -89,6 +91,7 @@ export const getProfileByUsername = async (username: string): Promise<UserProfil
       displayName: profile.display_name || profile.username,
       bio: profile.bio || '',
       avatar: profile.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.username}`,
+      backgroundImage: profile.background_image || '',
       links: links || [],
       theme: profile.theme || 'default',
     };
@@ -104,9 +107,10 @@ export const updateProfile = async (userId: string, data: Partial<UserProfile>):
     const updateData: any = {};
     
     if (data.username) updateData.username = data.username.toLowerCase();
-    if (data.displayName) updateData.display_name = data.displayName;
-    if (data.bio) updateData.bio = data.bio;
-    if (data.avatar) updateData.avatar = data.avatar;
+    if (data.displayName !== undefined) updateData.display_name = data.displayName;
+    if (data.bio !== undefined) updateData.bio = data.bio;
+    if (data.avatar !== undefined) updateData.avatar = data.avatar;
+    if (data.backgroundImage !== undefined) updateData.background_image = data.backgroundImage;
     if (data.theme) updateData.theme = data.theme;
     
     const { error } = await supabase

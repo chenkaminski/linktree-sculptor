@@ -7,12 +7,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LogOut, LinkIcon, User, Settings } from 'lucide-react';
+import { LogOut, LinkIcon, User, Settings, Image as ImageIcon } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import LinkForm from '@/components/LinkForm';
 import DashboardLinkItem from '@/components/DashboardLinkItem';
 import { UserProfile, Link as LinkType, getOrCreateProfile, updateProfile, addLink, updateLink, deleteLink } from '@/services/linkService';
 import { themes } from '@/services/themeService';
+import SocialIconPicker from '@/components/SocialIconPicker';
+import ImageUploader from '@/components/ImageUploader';
 
 const Dashboard = () => {
   const { user, signOut } = useAuth();
@@ -30,7 +32,7 @@ const Dashboard = () => {
     const fetchProfile = async () => {
       if (user) {
         try {
-          const profile = await getOrCreateProfile(user.id, user.username || undefined);
+          const profile = await getOrCreateProfile(user.id);
           setProfile(profile);
           setProfileForm({
             displayName: profile.displayName,
@@ -81,6 +83,23 @@ const Dashboard = () => {
       console.error('Error adding link:', error);
     }
   };
+  
+  const handleAddSocialLink = async (data: { title: string; url: string; icon: string }) => {
+    if (!user) return;
+    
+    try {
+      const newLink = await addLink(user.id, data);
+      setProfile(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          links: [...prev.links, newLink],
+        };
+      });
+    } catch (error) {
+      console.error('Error adding social link:', error);
+    }
+  };
 
   const handleEditLink = async (id: string, data: { title: string; url: string }) => {
     if (!user) return;
@@ -126,6 +145,32 @@ const Dashboard = () => {
       setProfile(updatedProfile);
     } catch (error) {
       console.error('Error updating theme:', error);
+    }
+  };
+  
+  const handleAvatarChange = async (url: string) => {
+    if (!user || !profile) return;
+    
+    try {
+      const updatedProfile = await updateProfile(user.id, {
+        avatar: url,
+      });
+      setProfile(updatedProfile);
+    } catch (error) {
+      console.error('Error updating avatar:', error);
+    }
+  };
+  
+  const handleBackgroundChange = async (url: string) => {
+    if (!user || !profile) return;
+    
+    try {
+      const updatedProfile = await updateProfile(user.id, {
+        backgroundImage: url,
+      });
+      setProfile(updatedProfile);
+    } catch (error) {
+      console.error('Error updating background:', error);
     }
   };
 
@@ -222,12 +267,15 @@ const Dashboard = () => {
                         />
                       </div>
                     ) : profile?.links.length > 0 ? (
-                      <Button 
-                        onClick={() => setAddingLink(true)} 
-                        className="mt-4 w-full"
-                      >
-                        Add another link
-                      </Button>
+                      <div className="flex flex-wrap gap-2 mt-4">
+                        <Button 
+                          onClick={() => setAddingLink(true)} 
+                          className="flex-1"
+                        >
+                          Add another link
+                        </Button>
+                        <SocialIconPicker onAddLink={handleAddSocialLink} />
+                      </div>
                     ) : null}
                   </CardContent>
                 </Card>
@@ -244,8 +292,21 @@ const Dashboard = () => {
                     </CardHeader>
                     <CardContent>
                       <div className="border border-gray-200 rounded-lg h-[500px] overflow-hidden">
-                        <div className="h-full w-full bg-gradient-to-br from-purple-500 to-indigo-600 p-8 flex flex-col items-center overflow-y-auto">
-                          <div className="w-20 h-20 bg-white rounded-full mb-4"></div>
+                        <div 
+                          className="h-full w-full p-8 flex flex-col items-center overflow-y-auto"
+                          style={profile?.backgroundImage ? {
+                            backgroundImage: `url(${profile.backgroundImage})`,
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center',
+                          } : {}}
+                        >
+                          <div className="w-20 h-20 rounded-full overflow-hidden mb-4 bg-white/20">
+                            <img 
+                              src={profile?.avatar} 
+                              alt={profile?.displayName || 'Avatar'} 
+                              className="w-full h-full object-cover" 
+                            />
+                          </div>
                           <h3 className="text-xl font-semibold text-white mb-1">
                             {profile?.displayName || 'Your Name'}
                           </h3>
@@ -281,11 +342,30 @@ const Dashboard = () => {
           <TabsContent value="appearance">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <div className="md:col-span-2">
+                <Card className="mb-6">
+                  <CardHeader>
+                    <CardTitle>Background Image</CardTitle>
+                    <CardDescription>
+                      Upload a custom background image for your page
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {user && profile && (
+                      <ImageUploader
+                        type="background"
+                        currentImage={profile.backgroundImage}
+                        userId={user.id}
+                        onImageUploaded={handleBackgroundChange}
+                      />
+                    )}
+                  </CardContent>
+                </Card>
+                
                 <Card>
                   <CardHeader>
-                    <CardTitle>Appearance</CardTitle>
+                    <CardTitle>Theme</CardTitle>
                     <CardDescription>
-                      Customize how your page looks
+                      Choose a theme for your page
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -326,12 +406,27 @@ const Dashboard = () => {
                     </CardHeader>
                     <CardContent>
                       <div className="border border-gray-200 rounded-lg h-[500px] overflow-hidden">
-                        <div className={`h-full w-full ${themes.find(t => t.id === profile?.theme)?.background || themes[0].background} p-8 flex flex-col items-center overflow-y-auto`}>
-                          <div className="w-20 h-20 bg-white rounded-full mb-4"></div>
-                          <h3 className={`text-xl font-semibold mb-1 ${themes.find(t => t.id === profile?.theme)?.textColor || 'text-white'}`}>
+                        <div 
+                          className="h-full w-full p-8 flex flex-col items-center overflow-y-auto"
+                          style={profile?.backgroundImage ? {
+                            backgroundImage: `url(${profile.backgroundImage})`,
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center',
+                          } : {
+                            background: themes.find(t => t.id === profile?.theme)?.background || themes[0].background
+                          }}
+                        >
+                          <div className="w-20 h-20 rounded-full overflow-hidden mb-4 bg-white/20">
+                            <img 
+                              src={profile?.avatar} 
+                              alt={profile?.displayName || 'Avatar'} 
+                              className="w-full h-full object-cover" 
+                            />
+                          </div>
+                          <h3 className={`text-xl font-semibold mb-1 ${profile?.backgroundImage ? 'text-white' : themes.find(t => t.id === profile?.theme)?.textColor || 'text-white'}`}>
                             {profile?.displayName || 'Your Name'}
                           </h3>
-                          <p className={`text-sm mb-6 text-center ${themes.find(t => t.id === profile?.theme)?.textColor || 'text-white'} opacity-80`}>
+                          <p className={`text-sm mb-6 text-center ${profile?.backgroundImage ? 'text-white/80' : (themes.find(t => t.id === profile?.theme)?.textColor || 'text-white') + ' opacity-80'}`}>
                             {profile?.bio || 'Your bio goes here'}
                           </p>
                           
@@ -339,14 +434,14 @@ const Dashboard = () => {
                             {profile?.links.map((link) => (
                               <div 
                                 key={link.id}
-                                className={`w-full py-3 px-5 rounded-lg flex items-center justify-center gap-2 font-medium ${themes.find(t => t.id === profile?.theme)?.buttonStyle || 'bg-white text-gray-800'}`}
+                                className={`w-full py-3 px-5 rounded-lg flex items-center justify-center gap-2 font-medium ${profile?.backgroundImage ? 'bg-white/20 backdrop-blur-sm text-white' : themes.find(t => t.id === profile?.theme)?.buttonStyle || 'bg-white text-gray-800'}`}
                               >
                                 {link.title}
                               </div>
                             ))}
                             
                             {profile?.links.length === 0 && (
-                              <div className={`text-center py-8 ${themes.find(t => t.id === profile?.theme)?.textColor || 'text-white'} opacity-80`}>
+                              <div className={`text-center py-8 ${profile?.backgroundImage ? 'text-white/80' : (themes.find(t => t.id === profile?.theme)?.textColor || 'text-white') + ' opacity-80'}`}>
                                 <p>Add some links to see them here</p>
                               </div>
                             )}
@@ -363,6 +458,25 @@ const Dashboard = () => {
           <TabsContent value="profile">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <div className="md:col-span-2">
+                <Card className="mb-6">
+                  <CardHeader>
+                    <CardTitle>Profile Avatar</CardTitle>
+                    <CardDescription>
+                      Upload a profile picture
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {user && profile && (
+                      <ImageUploader
+                        type="avatar"
+                        currentImage={profile.avatar}
+                        userId={user.id}
+                        onImageUploaded={handleAvatarChange}
+                      />
+                    )}
+                  </CardContent>
+                </Card>
+                
                 <Card>
                   <CardHeader>
                     <CardTitle>Profile Settings</CardTitle>
@@ -425,12 +539,27 @@ const Dashboard = () => {
                     </CardHeader>
                     <CardContent>
                       <div className="border border-gray-200 rounded-lg h-[500px] overflow-hidden">
-                        <div className={`h-full w-full ${themes.find(t => t.id === profile?.theme)?.background || themes[0].background} p-8 flex flex-col items-center overflow-y-auto`}>
-                          <div className="w-20 h-20 bg-white rounded-full mb-4"></div>
-                          <h3 className={`text-xl font-semibold mb-1 ${themes.find(t => t.id === profile?.theme)?.textColor || 'text-white'}`}>
+                        <div 
+                          className="h-full w-full p-8 flex flex-col items-center overflow-y-auto"
+                          style={profile?.backgroundImage ? {
+                            backgroundImage: `url(${profile.backgroundImage})`,
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center',
+                          } : {
+                            background: themes.find(t => t.id === profile?.theme)?.background || themes[0].background
+                          }}
+                        >
+                          <div className="w-20 h-20 rounded-full overflow-hidden mb-4 bg-white/20">
+                            <img 
+                              src={profile?.avatar} 
+                              alt={profileForm.displayName || 'Avatar'} 
+                              className="w-full h-full object-cover" 
+                            />
+                          </div>
+                          <h3 className={`text-xl font-semibold mb-1 ${profile?.backgroundImage ? 'text-white' : themes.find(t => t.id === profile?.theme)?.textColor || 'text-white'}`}>
                             {profileForm.displayName || 'Your Name'}
                           </h3>
-                          <p className={`text-sm mb-6 text-center ${themes.find(t => t.id === profile?.theme)?.textColor || 'text-white'} opacity-80`}>
+                          <p className={`text-sm mb-6 text-center ${profile?.backgroundImage ? 'text-white/80' : (themes.find(t => t.id === profile?.theme)?.textColor || 'text-white') + ' opacity-80'}`}>
                             {profileForm.bio || 'Your bio goes here'}
                           </p>
                           
@@ -438,14 +567,14 @@ const Dashboard = () => {
                             {profile?.links.map((link) => (
                               <div 
                                 key={link.id}
-                                className={`w-full py-3 px-5 rounded-lg flex items-center justify-center gap-2 font-medium ${themes.find(t => t.id === profile?.theme)?.buttonStyle || 'bg-white text-gray-800'}`}
+                                className={`w-full py-3 px-5 rounded-lg flex items-center justify-center gap-2 font-medium ${profile?.backgroundImage ? 'bg-white/20 backdrop-blur-sm text-white' : themes.find(t => t.id === profile?.theme)?.buttonStyle || 'bg-white text-gray-800'}`}
                               >
                                 {link.title}
                               </div>
                             ))}
                             
                             {profile?.links.length === 0 && (
-                              <div className={`text-center py-8 ${themes.find(t => t.id === profile?.theme)?.textColor || 'text-white'} opacity-80`}>
+                              <div className={`text-center py-8 ${profile?.backgroundImage ? 'text-white/80' : (themes.find(t => t.id === profile?.theme)?.textColor || 'text-white') + ' opacity-80'}`}>
                                 <p>Add some links to see them here</p>
                               </div>
                             )}

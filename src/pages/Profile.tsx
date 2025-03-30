@@ -4,6 +4,22 @@ import { useParams } from 'react-router-dom';
 import { UserProfile, getProfileByUsername } from '@/services/linkService';
 import { getTheme } from '@/services/themeService';
 import LinkItem from '@/components/LinkItem';
+import { 
+  Facebook, 
+  Twitter, 
+  Instagram, 
+  Linkedin, 
+  Github, 
+  Youtube, 
+  Mail,
+  Globe,
+  Twitch,
+  Dribbble,
+  Figma,
+  Slack,
+  Spotify,
+  Link as LinkIcon
+} from 'lucide-react';
 
 const Profile = () => {
   const { username } = useParams<{ username: string }>();
@@ -56,10 +72,43 @@ const Profile = () => {
   }
 
   const theme = getTheme(profile.theme);
+  
+  // Get the icon component based on the icon name
+  const getSocialIcon = (iconName: string | undefined) => {
+    if (!iconName) return <LinkIcon size={16} />;
+    
+    const iconMap: Record<string, JSX.Element> = {
+      'facebook': <Facebook size={16} />,
+      'twitter/x': <Twitter size={16} />,
+      'twitter': <Twitter size={16} />,
+      'instagram': <Instagram size={16} />,
+      'linkedin': <Linkedin size={16} />,
+      'github': <Github size={16} />,
+      'youtube': <Youtube size={16} />,
+      'email': <Mail size={16} />,
+      'website': <Globe size={16} />,
+      'twitch': <Twitch size={16} />,
+      'dribbble': <Dribbble size={16} />,
+      'figma': <Figma size={16} />,
+      'slack': <Slack size={16} />,
+      'spotify': <Spotify size={16} />,
+    };
+    
+    return iconMap[iconName.toLowerCase()] || <LinkIcon size={16} />;
+  };
 
   return (
-    <div className={`min-h-screen ${theme.background} flex flex-col items-center p-6`}>
-      <div className="w-full max-w-md mx-auto flex flex-col items-center py-8">
+    <div 
+      className={`min-h-screen flex flex-col items-center p-6`}
+      style={profile.backgroundImage ? {
+        backgroundImage: `url(${profile.backgroundImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      } : undefined}
+    >
+      <div className={`w-full max-w-md mx-auto flex flex-col items-center py-8 ${
+        profile.backgroundImage ? 'bg-white/80 backdrop-blur-sm rounded-lg p-6' : theme.background
+      }`}>
         <div className="w-24 h-24 rounded-full overflow-hidden mb-4 bg-white/20 backdrop-blur-sm">
           <img
             src={profile.avatar}
@@ -82,6 +131,7 @@ const Profile = () => {
               key={link.id}
               link={link}
               className={theme.buttonStyle}
+              icon={getSocialIcon(link.icon)}
             />
           ))}
           
