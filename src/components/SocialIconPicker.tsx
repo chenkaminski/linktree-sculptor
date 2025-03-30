@@ -24,7 +24,6 @@ import {
   Dribbble,
   Figma,
   Slack,
-  Spotify,
   PlusCircle
 } from 'lucide-react';
 
@@ -41,7 +40,6 @@ const socialIcons = [
   { name: 'Dribbble', icon: <Dribbble size={24} />, prefix: 'https://dribbble.com/' },
   { name: 'Figma', icon: <Figma size={24} />, prefix: 'https://figma.com/@' },
   { name: 'Slack', icon: <Slack size={24} />, prefix: 'https://slack.com/' },
-  { name: 'Spotify', icon: <Spotify size={24} />, prefix: 'https://open.spotify.com/user/' },
   { name: 'Other', icon: <LinkIcon size={24} />, prefix: 'https://' },
 ];
 
