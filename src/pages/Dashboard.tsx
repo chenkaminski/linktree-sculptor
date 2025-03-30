@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -11,10 +10,35 @@ import { LogOut, LinkIcon, User, Settings, Image as ImageIcon } from 'lucide-rea
 import { useAuth } from '@/contexts/AuthContext';
 import LinkForm from '@/components/LinkForm';
 import DashboardLinkItem from '@/components/DashboardLinkItem';
-import { UserProfile, Link as LinkType, getOrCreateProfile, updateProfile, addLink, updateLink, deleteLink } from '@/services/linkService';
+import { UserProfile, Link as LinkType, getOrCreateProfile, updateProfile, addLink, updateLink, deleteLink, reorderLinks } from '@/services/linkService';
 import { themes } from '@/services/themeService';
 import SocialIconPicker from '@/components/SocialIconPicker';
 import ImageUploader from '@/components/ImageUploader';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
+import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
+import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
+import { CSS } from '@dnd-kit/utilities';
+
+const SortableLinkItem = ({ link, onEdit, onDelete }) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: link.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition
+  };
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <DashboardLinkItem 
+        link={link} 
+        onEdit={onEdit} 
+        onDelete={onDelete} 
+        isDragging={isDragging}
+        dragHandleProps={{ ...attributes, ...listeners }}
+      />
+    </div>
+  );
+};
 
 const Dashboard = () => {
   const { user, signOut } = useAuth();
@@ -27,6 +51,13 @@ const Dashboard = () => {
   });
   
   const [addingLink, setAddingLink] = useState(false);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -174,6 +205,50 @@ const Dashboard = () => {
     }
   };
 
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    
+    if (active.id !== over.id && profile && user) {
+      const oldLinks = [...profile.links];
+      const oldIndex = oldLinks.findIndex(link => link.id === active.id);
+      const newIndex = oldLinks.findIndex(link => link.id === over.id);
+      
+      if (oldIndex !== -1 && newIndex !== -1) {
+        const newLinks = [...oldLinks];
+        const [movedItem] = newLinks.splice(oldIndex, 1);
+        newLinks.splice(newIndex, 0, movedItem);
+        
+        setProfile(prev => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            links: newLinks,
+          };
+        });
+        
+        try {
+          const updatedLinks = await reorderLinks(user.id, newLinks);
+          setProfile(prev => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              links: updatedLinks,
+            };
+          });
+        } catch (error) {
+          console.error('Error reordering links:', error);
+          setProfile(prev => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              links: oldLinks,
+            };
+          });
+        }
+      }
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -237,7 +312,7 @@ const Dashboard = () => {
                   <CardHeader>
                     <CardTitle>Manage Links</CardTitle>
                     <CardDescription>
-                      Add, edit, or remove links from your page
+                      Add, edit, or remove links from your page. Drag to reorder.
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -250,14 +325,28 @@ const Dashboard = () => {
                       </div>
                     )}
                     
-                    {profile?.links.map((link) => (
-                      <DashboardLinkItem
-                        key={link.id}
-                        link={link}
-                        onEdit={handleEditLink}
-                        onDelete={handleDeleteLink}
-                      />
-                    ))}
+                    {profile?.links.length > 0 && (
+                      <DndContext 
+                        sensors={sensors}
+                        collisionDetection={closestCenter}
+                        onDragEnd={handleDragEnd}
+                        modifiers={[restrictToVerticalAxis]}
+                      >
+                        <SortableContext 
+                          items={profile.links.map(link => link.id)}
+                          strategy={verticalListSortingStrategy}
+                        >
+                          {profile.links.map((link) => (
+                            <SortableLinkItem
+                              key={link.id}
+                              link={link}
+                              onEdit={handleEditLink}
+                              onDelete={handleDeleteLink}
+                            />
+                          ))}
+                        </SortableContext>
+                      </DndContext>
+                    )}
                     
                     {addingLink ? (
                       <div className="mt-4">
@@ -298,7 +387,9 @@ const Dashboard = () => {
                             backgroundImage: `url(${profile.backgroundImage})`,
                             backgroundSize: 'cover',
                             backgroundPosition: 'center',
-                          } : {}}
+                          } : {
+                            background: themes.find(t => t.id === profile?.theme)?.background || themes[0].background
+                          }}
                         >
                           <div className="w-20 h-20 rounded-full overflow-hidden mb-4 bg-white/20">
                             <img 
@@ -307,10 +398,10 @@ const Dashboard = () => {
                               className="w-full h-full object-cover" 
                             />
                           </div>
-                          <h3 className="text-xl font-semibold text-white mb-1">
+                          <h3 className={`text-xl font-semibold mb-1 ${profile?.backgroundImage ? 'text-white' : themes.find(t => t.id === profile?.theme)?.textColor || 'text-white'}`}>
                             {profile?.displayName || 'Your Name'}
                           </h3>
-                          <p className="text-sm text-white/80 mb-6 text-center">
+                          <p className={`text-sm mb-6 text-center ${profile?.backgroundImage ? 'text-white/80' : (themes.find(t => t.id === profile?.theme)?.textColor || 'text-white') + ' opacity-80'}`}>
                             {profile?.bio || 'Your bio goes here'}
                           </p>
                           
@@ -318,14 +409,14 @@ const Dashboard = () => {
                             {profile?.links.map((link) => (
                               <div 
                                 key={link.id}
-                                className="w-full bg-white/20 backdrop-blur-sm py-3 px-5 rounded-lg flex items-center justify-center gap-2 font-medium text-white"
+                                className={`w-full py-3 px-5 rounded-lg flex items-center justify-center gap-2 font-medium ${profile?.backgroundImage ? 'bg-white/20 backdrop-blur-sm text-white' : themes.find(t => t.id === profile?.theme)?.buttonStyle || 'bg-white text-gray-800'}`}
                               >
                                 {link.title}
                               </div>
                             ))}
                             
                             {profile?.links.length === 0 && (
-                              <div className="text-center text-white/80 py-8">
+                              <div className={`text-center py-8 ${profile?.backgroundImage ? 'text-white/80' : (themes.find(t => t.id === profile?.theme)?.textColor || 'text-white') + ' opacity-80'}`}>
                                 <p>Add some links to see them here</p>
                               </div>
                             )}

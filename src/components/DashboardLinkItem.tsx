@@ -11,6 +11,7 @@ interface DashboardLinkItemProps {
   onEdit: (id: string, data: { title: string; url: string }) => void;
   onDelete: (id: string) => void;
   isDragging?: boolean;
+  dragHandleProps?: any;
 }
 
 const DashboardLinkItem = ({ 
@@ -18,6 +19,7 @@ const DashboardLinkItem = ({
   onEdit, 
   onDelete,
   isDragging = false,
+  dragHandleProps
 }: DashboardLinkItemProps) => {
   const [isEditing, setIsEditing] = useState(false);
 
@@ -41,7 +43,7 @@ const DashboardLinkItem = ({
     <Card className={`mb-3 ${isDragging ? 'opacity-50' : ''}`}>
       <CardContent className="p-4 flex items-center justify-between">
         <div className="flex items-center flex-1">
-          <div className="cursor-move mr-2 text-gray-400">
+          <div className="cursor-move mr-2 text-gray-400" {...dragHandleProps}>
             <GripVertical size={18} />
           </div>
           <div className="flex-1">

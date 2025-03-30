@@ -44,6 +44,49 @@ export const themes: Theme[] = [
     buttonStyle: 'bg-white text-green-600',
     textColor: 'text-white',
   },
+  // New themes
+  {
+    id: 'midnight',
+    name: 'Midnight',
+    background: 'bg-gradient-to-br from-gray-900 to-blue-900',
+    buttonStyle: 'bg-blue-200 text-blue-900',
+    textColor: 'text-white',
+  },
+  {
+    id: 'pastel',
+    name: 'Pastel',
+    background: 'bg-gradient-to-br from-pink-200 to-blue-200',
+    buttonStyle: 'bg-white text-pink-600 border border-pink-300',
+    textColor: 'text-gray-800',
+  },
+  {
+    id: 'neon',
+    name: 'Neon',
+    background: 'bg-black',
+    buttonStyle: 'bg-pink-500 text-white hover:bg-pink-600',
+    textColor: 'text-pink-400',
+  },
+  {
+    id: 'autumn',
+    name: 'Autumn',
+    background: 'bg-gradient-to-br from-yellow-500 to-red-500',
+    buttonStyle: 'bg-amber-100 text-amber-900',
+    textColor: 'text-white',
+  },
+  {
+    id: 'monochrome',
+    name: 'Monochrome',
+    background: 'bg-gray-100',
+    buttonStyle: 'bg-gray-800 text-white hover:bg-gray-700',
+    textColor: 'text-gray-800',
+  },
+  {
+    id: 'galaxy',
+    name: 'Galaxy',
+    background: 'bg-gradient-to-br from-purple-900 to-indigo-900',
+    buttonStyle: 'bg-purple-200 text-purple-900 border border-purple-300',
+    textColor: 'text-white',
+  },
 ];
 
 // Get a theme by ID
