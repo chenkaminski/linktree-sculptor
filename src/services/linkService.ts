@@ -1,5 +1,7 @@
 
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { Database } from '@/integrations/supabase/schema';
 
 export interface Link {
   id: string;
@@ -18,174 +20,299 @@ export interface UserProfile {
   theme: string;
 }
 
-// Mock data storage (in a real app, this would be in a database)
-let mockProfiles: Record<string, UserProfile> = {
-  'demo': {
-    username: 'demo',
-    displayName: 'Demo User',
-    bio: 'This is a demo profile for our LinkTree clone',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=demo',
-    links: [
-      { id: '1', title: 'My Website', url: 'https://example.com', position: 0 },
-      { id: '2', title: 'My GitHub', url: 'https://github.com', position: 1 },
-      { id: '3', title: 'My Twitter', url: 'https://twitter.com', position: 2 },
-      { id: '4', title: 'My LinkedIn', url: 'https://linkedin.com', position: 3 },
-    ],
-    theme: 'default',
-  },
-};
-
-// Get or create a profile
+// Get or create a profile for the current user
 export const getOrCreateProfile = async (userId: string, defaultUsername?: string): Promise<UserProfile> => {
-  // Simulate API call delay
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
-  if (!mockProfiles[userId]) {
-    // Create a new profile
-    mockProfiles[userId] = {
-      username: defaultUsername || userId,
-      displayName: defaultUsername || 'New User',
-      bio: 'Welcome to my links page!',
-      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${userId}`,
-      links: [],
-      theme: 'default',
+  try {
+    let { data: profile, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+
+    if (error) {
+      console.error('Error fetching profile:', error);
+      throw error;
+    }
+
+    let { data: links, error: linksError } = await supabase
+      .from('links')
+      .select('*')
+      .eq('user_id', userId)
+      .order('position');
+
+    if (linksError) {
+      console.error('Error fetching links:', linksError);
+      throw linksError;
+    }
+
+    return {
+      username: profile.username,
+      displayName: profile.display_name || profile.username,
+      bio: profile.bio || 'Welcome to my links page!',
+      avatar: profile.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.username}`,
+      links: links || [],
+      theme: profile.theme || 'default',
     };
+  } catch (error) {
+    console.error('Error in getOrCreateProfile:', error);
+    throw error;
   }
-  
-  return mockProfiles[userId];
 };
 
 // Get profile by username
 export const getProfileByUsername = async (username: string): Promise<UserProfile | null> => {
-  // Simulate API call delay
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
-  // Find profile with matching username
-  const profile = Object.values(mockProfiles).find(p => p.username.toLowerCase() === username.toLowerCase());
-  return profile || null;
+  try {
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('username', username.toLowerCase())
+      .single();
+
+    if (error) {
+      console.error('Error fetching profile by username:', error);
+      return null;
+    }
+
+    const { data: links, error: linksError } = await supabase
+      .from('links')
+      .select('*')
+      .eq('user_id', profile.id)
+      .order('position');
+
+    if (linksError) {
+      console.error('Error fetching links for profile:', linksError);
+      throw linksError;
+    }
+
+    return {
+      username: profile.username,
+      displayName: profile.display_name || profile.username,
+      bio: profile.bio || '',
+      avatar: profile.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.username}`,
+      links: links || [],
+      theme: profile.theme || 'default',
+    };
+  } catch (error) {
+    console.error('Error in getProfileByUsername:', error);
+    return null;
+  }
 };
 
 // Update profile
 export const updateProfile = async (userId: string, data: Partial<UserProfile>): Promise<UserProfile> => {
-  // Simulate API call delay
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
-  if (!mockProfiles[userId]) {
-    throw new Error('Profile not found');
+  try {
+    const updateData: any = {};
+    
+    if (data.username) updateData.username = data.username.toLowerCase();
+    if (data.displayName) updateData.display_name = data.displayName;
+    if (data.bio) updateData.bio = data.bio;
+    if (data.avatar) updateData.avatar = data.avatar;
+    if (data.theme) updateData.theme = data.theme;
+    
+    const { error } = await supabase
+      .from('profiles')
+      .update(updateData)
+      .eq('id', userId);
+
+    if (error) {
+      console.error('Error updating profile:', error);
+      throw error;
+    }
+
+    toast({
+      title: 'Profile updated',
+      description: 'Your profile has been updated successfully',
+    });
+
+    return await getOrCreateProfile(userId);
+  } catch (error) {
+    console.error('Error in updateProfile:', error);
+    throw error;
   }
-  
-  // Update profile
-  mockProfiles[userId] = {
-    ...mockProfiles[userId],
-    ...data,
-  };
-  
-  toast({
-    title: 'Profile updated',
-    description: 'Your profile has been updated successfully',
-  });
-  
-  return mockProfiles[userId];
 };
 
 // Add link
 export const addLink = async (userId: string, linkData: Omit<Link, 'id' | 'position'>): Promise<Link> => {
-  // Simulate API call delay
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
-  if (!mockProfiles[userId]) {
-    throw new Error('Profile not found');
+  try {
+    // Get the count of existing links to determine the position
+    const { count, error: countError } = await supabase
+      .from('links')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId);
+
+    if (countError) {
+      console.error('Error counting links:', countError);
+      throw countError;
+    }
+
+    const position = count || 0;
+
+    const { data, error } = await supabase
+      .from('links')
+      .insert([
+        {
+          user_id: userId,
+          title: linkData.title,
+          url: linkData.url,
+          icon: linkData.icon,
+          position: position
+        }
+      ])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error adding link:', error);
+      throw error;
+    }
+
+    toast({
+      title: 'Link added',
+      description: 'Your link has been added successfully',
+    });
+
+    return data;
+  } catch (error) {
+    console.error('Error in addLink:', error);
+    throw error;
   }
-  
-  const newLink: Link = {
-    id: Math.random().toString(36).substring(2, 9),
-    position: mockProfiles[userId].links.length,
-    ...linkData,
-  };
-  
-  mockProfiles[userId].links.push(newLink);
-  
-  toast({
-    title: 'Link added',
-    description: 'Your link has been added successfully',
-  });
-  
-  return newLink;
 };
 
 // Update link
 export const updateLink = async (userId: string, linkId: string, linkData: Partial<Link>): Promise<Link> => {
-  // Simulate API call delay
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
-  if (!mockProfiles[userId]) {
-    throw new Error('Profile not found');
+  try {
+    const { data, error } = await supabase
+      .from('links')
+      .update({
+        title: linkData.title,
+        url: linkData.url,
+        icon: linkData.icon,
+        position: linkData.position
+      })
+      .eq('id', linkId)
+      .eq('user_id', userId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating link:', error);
+      throw error;
+    }
+
+    toast({
+      title: 'Link updated',
+      description: 'Your link has been updated successfully',
+    });
+
+    return data;
+  } catch (error) {
+    console.error('Error in updateLink:', error);
+    throw error;
   }
-  
-  const linkIndex = mockProfiles[userId].links.findIndex(link => link.id === linkId);
-  if (linkIndex === -1) {
-    throw new Error('Link not found');
-  }
-  
-  mockProfiles[userId].links[linkIndex] = {
-    ...mockProfiles[userId].links[linkIndex],
-    ...linkData,
-  };
-  
-  toast({
-    title: 'Link updated',
-    description: 'Your link has been updated successfully',
-  });
-  
-  return mockProfiles[userId].links[linkIndex];
 };
 
 // Delete link
 export const deleteLink = async (userId: string, linkId: string): Promise<void> => {
-  // Simulate API call delay
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
-  if (!mockProfiles[userId]) {
-    throw new Error('Profile not found');
+  try {
+    // Get the position of the link to be deleted
+    const { data: linkToDelete, error: fetchError } = await supabase
+      .from('links')
+      .select('position')
+      .eq('id', linkId)
+      .eq('user_id', userId)
+      .single();
+
+    if (fetchError) {
+      console.error('Error fetching link to delete:', fetchError);
+      throw fetchError;
+    }
+
+    // Delete the link
+    const { error: deleteError } = await supabase
+      .from('links')
+      .delete()
+      .eq('id', linkId)
+      .eq('user_id', userId);
+
+    if (deleteError) {
+      console.error('Error deleting link:', deleteError);
+      throw deleteError;
+    }
+
+    // Update positions of remaining links
+    const { data: remainingLinks, error: fetchRemainingError } = await supabase
+      .from('links')
+      .select('id, position')
+      .eq('user_id', userId)
+      .gt('position', linkToDelete.position)
+      .order('position');
+
+    if (fetchRemainingError) {
+      console.error('Error fetching remaining links:', fetchRemainingError);
+      throw fetchRemainingError;
+    }
+
+    // Update positions of remaining links
+    for (const link of remainingLinks || []) {
+      const { error: updateError } = await supabase
+        .from('links')
+        .update({ position: link.position - 1 })
+        .eq('id', link.id)
+        .eq('user_id', userId);
+
+      if (updateError) {
+        console.error('Error updating link position:', updateError);
+        throw updateError;
+      }
+    }
+
+    toast({
+      title: 'Link deleted',
+      description: 'Your link has been deleted successfully',
+    });
+  } catch (error) {
+    console.error('Error in deleteLink:', error);
+    throw error;
   }
-  
-  const linkIndex = mockProfiles[userId].links.findIndex(link => link.id === linkId);
-  if (linkIndex === -1) {
-    throw new Error('Link not found');
-  }
-  
-  mockProfiles[userId].links = mockProfiles[userId].links.filter(link => link.id !== linkId);
-  
-  // Update positions
-  mockProfiles[userId].links.forEach((link, index) => {
-    link.position = index;
-  });
-  
-  toast({
-    title: 'Link deleted',
-    description: 'Your link has been deleted successfully',
-  });
 };
 
 // Reorder links
 export const reorderLinks = async (userId: string, links: Link[]): Promise<Link[]> => {
-  // Simulate API call delay
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
-  if (!mockProfiles[userId]) {
-    throw new Error('Profile not found');
+  try {
+    // Update positions for all links
+    for (let i = 0; i < links.length; i++) {
+      const { error } = await supabase
+        .from('links')
+        .update({ position: i })
+        .eq('id', links[i].id)
+        .eq('user_id', userId);
+
+      if (error) {
+        console.error('Error updating link position:', error);
+        throw error;
+      }
+    }
+
+    toast({
+      title: 'Links reordered',
+      description: 'Your links have been reordered successfully',
+    });
+
+    // Return the updated links
+    const { data, error } = await supabase
+      .from('links')
+      .select('*')
+      .eq('user_id', userId)
+      .order('position');
+
+    if (error) {
+      console.error('Error fetching reordered links:', error);
+      throw error;
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error in reorderLinks:', error);
+    throw error;
   }
-  
-  // Update positions
-  mockProfiles[userId].links = links.map((link, index) => ({
-    ...link,
-    position: index,
-  }));
-  
-  toast({
-    title: 'Links reordered',
-    description: 'Your links have been reordered successfully',
-  });
-  
-  return mockProfiles[userId].links;
 };

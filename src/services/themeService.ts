@@ -50,3 +50,10 @@ export const themes: Theme[] = [
 export const getTheme = (themeId: string): Theme => {
   return themes.find(theme => theme.id === themeId) || themes[0];
 };
+
+// Save user theme preference
+export const saveUserThemePreference = async (userId: string, themeId: string) => {
+  // This function is now handled in the linkService.ts updateProfile function
+  // It's kept here for reference and potential future use
+  return themeId;
+};
