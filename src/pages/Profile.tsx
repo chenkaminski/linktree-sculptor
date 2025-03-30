@@ -17,7 +17,6 @@ import {
   Dribbble,
   Figma,
   Slack,
-  Spotify,
   Link as LinkIcon
 } from 'lucide-react';
 
@@ -91,7 +90,6 @@ const Profile = () => {
       'dribbble': <Dribbble size={16} />,
       'figma': <Figma size={16} />,
       'slack': <Slack size={16} />,
-      'spotify': <Spotify size={16} />,
     };
     
     return iconMap[iconName.toLowerCase()] || <LinkIcon size={16} />;
