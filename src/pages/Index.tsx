@@ -2,9 +2,34 @@
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 const Index = () => {
   const { user } = useAuth();
+  const [username, setUsername] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (!user) return;
+      
+      try {
+        const { data } = await supabase
+          .from('profiles')
+          .select('username')
+          .eq('id', user.id)
+          .single();
+        
+        if (data) {
+          setUsername(data.username);
+        }
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+      }
+    };
+
+    fetchUserProfile();
+  }, [user]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100">
@@ -19,9 +44,11 @@ const Index = () => {
                 <Link to="/dashboard">
                   <Button variant="ghost">Dashboard</Button>
                 </Link>
-                <Link to={`/u/${user.username}`}>
-                  <Button variant="ghost">My Profile</Button>
-                </Link>
+                {username && (
+                  <Link to={`/u/${username}`}>
+                    <Button variant="ghost">My Profile</Button>
+                  </Link>
+                )}
               </>
             ) : (
               <>
