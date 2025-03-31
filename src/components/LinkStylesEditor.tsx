@@ -25,7 +25,7 @@ const LinkStylesEditor = ({ link, onSubmit, onCancel }: LinkStylesEditorProps) =
   const [backgroundColor, setBackgroundColor] = useState(link.backgroundColor || '#f3f4f6');
   const [textColor, setTextColor] = useState(link.textColor || '#000000');
   const [borderRadius, setBorderRadius] = useState(link.borderRadius || '0.5rem');
-  const [displayType, setDisplayType] = useState<'button' | 'icon'>(link.displayType || 'button');
+  const [displayType, setDisplayType] = useState<'button' | 'icon' | 'video'>(link.displayType as 'button' | 'icon' | 'video' || 'button');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,7 +59,7 @@ const LinkStylesEditor = ({ link, onSubmit, onCancel }: LinkStylesEditorProps) =
 
   // This handler ensures type safety when changing display type
   const handleDisplayTypeChange = (value: string) => {
-    if (value === 'button' || value === 'icon') {
+    if (value === 'button' || value === 'icon' || value === 'video') {
       setDisplayType(value);
     }
   };
@@ -96,98 +96,121 @@ const LinkStylesEditor = ({ link, onSubmit, onCancel }: LinkStylesEditorProps) =
                 <RadioGroupItem value="icon" id="display-icon" />
                 <Label htmlFor="display-icon">Icon Only</Label>
               </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="video" id="display-video" />
+                <Label htmlFor="display-video">Video</Label>
+              </div>
             </RadioGroup>
+            {displayType === 'video' && (
+              <p className="text-xs text-gray-500 mt-2">
+                Video mode will embed content from YouTube, Vimeo, TikTok, or Instagram
+              </p>
+            )}
           </div>
           
-          <div>
-            <Label className="mb-2 block">Color Presets</Label>
-            <div className="grid grid-cols-4 gap-2">
-              {presetColors.map((color) => (
-                <div
-                  key={color.name}
-                  className="cursor-pointer border rounded p-2 text-center hover:border-purple-500 transition-colors"
-                  style={{ backgroundColor: color.bg, color: color.text }}
-                  onClick={() => {
-                    setBackgroundColor(color.bg);
-                    setTextColor(color.text);
+          {/* Only show color and style options for button and icon types */}
+          {displayType !== 'video' && (
+            <>
+              <div>
+                <Label className="mb-2 block">Color Presets</Label>
+                <div className="grid grid-cols-4 gap-2">
+                  {presetColors.map((color) => (
+                    <div
+                      key={color.name}
+                      className="cursor-pointer border rounded p-2 text-center hover:border-purple-500 transition-colors"
+                      style={{ backgroundColor: color.bg, color: color.text }}
+                      onClick={() => {
+                        setBackgroundColor(color.bg);
+                        setTextColor(color.text);
+                      }}
+                    >
+                      {color.name}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="background-color">Background Color</Label>
+                  <div className="flex">
+                    <Input
+                      id="background-color"
+                      type="color"
+                      value={backgroundColor}
+                      onChange={(e) => setBackgroundColor(e.target.value)}
+                      className="w-12 p-1 h-10"
+                    />
+                    <Input
+                      value={backgroundColor}
+                      onChange={(e) => setBackgroundColor(e.target.value)}
+                      className="flex-1 ml-2"
+                    />
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="text-color">Text Color</Label>
+                  <div className="flex">
+                    <Input
+                      id="text-color"
+                      type="color"
+                      value={textColor}
+                      onChange={(e) => setTextColor(e.target.value)}
+                      className="w-12 p-1 h-10"
+                    />
+                    <Input
+                      value={textColor}
+                      onChange={(e) => setTextColor(e.target.value)}
+                      className="flex-1 ml-2"
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="border-radius">Border Radius</Label>
+                <Select 
+                  value={borderRadius} 
+                  onValueChange={setBorderRadius}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select border radius" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {radiusOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="p-4 rounded-lg border mt-4">
+                <p className="text-sm text-gray-500 mb-2">Preview:</p>
+                <div 
+                  className="p-3 flex items-center justify-center"
+                  style={{ 
+                    backgroundColor, 
+                    color: textColor,
+                    borderRadius
                   }}
                 >
-                  {color.name}
+                  {link.title}
                 </div>
-              ))}
-            </div>
-          </div>
+              </div>
+            </>
+          )}
           
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="background-color">Background Color</Label>
-              <div className="flex">
-                <Input
-                  id="background-color"
-                  type="color"
-                  value={backgroundColor}
-                  onChange={(e) => setBackgroundColor(e.target.value)}
-                  className="w-12 p-1 h-10"
-                />
-                <Input
-                  value={backgroundColor}
-                  onChange={(e) => setBackgroundColor(e.target.value)}
-                  className="flex-1 ml-2"
-                />
+          {displayType === 'video' && (
+            <div className="p-4 rounded-lg border mt-4">
+              <p className="text-sm text-gray-500 mb-2">Video Preview:</p>
+              <div className="flex items-center justify-center p-4 bg-gray-100 rounded">
+                <p className="text-sm text-gray-600">Video will be embedded on your page</p>
               </div>
             </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="text-color">Text Color</Label>
-              <div className="flex">
-                <Input
-                  id="text-color"
-                  type="color"
-                  value={textColor}
-                  onChange={(e) => setTextColor(e.target.value)}
-                  className="w-12 p-1 h-10"
-                />
-                <Input
-                  value={textColor}
-                  onChange={(e) => setTextColor(e.target.value)}
-                  className="flex-1 ml-2"
-                />
-              </div>
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="border-radius">Border Radius</Label>
-            <Select 
-              value={borderRadius} 
-              onValueChange={setBorderRadius}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select border radius" />
-              </SelectTrigger>
-              <SelectContent>
-                {radiusOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div className="p-4 rounded-lg border mt-4">
-            <p className="text-sm text-gray-500 mb-2">Preview:</p>
-            <div 
-              className="p-3 flex items-center justify-center"
-              style={{ 
-                backgroundColor, 
-                color: textColor,
-                borderRadius
-              }}
-            >
-              {link.title}
-            </div>
-          </div>
+          )}
         </CardContent>
         
         <CardFooter>
