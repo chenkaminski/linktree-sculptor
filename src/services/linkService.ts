@@ -9,6 +9,10 @@ export interface Link {
   url: string;
   icon?: string;
   position: number;
+  backgroundColor?: string;
+  textColor?: string;
+  borderRadius?: string;
+  displayType?: 'button' | 'icon';
 }
 
 export interface UserProfile {
@@ -19,6 +23,9 @@ export interface UserProfile {
   backgroundImage: string;
   links: Link[];
   theme: string;
+  fontFamily?: string;
+  fontColor?: string;
+  showSocialIcons?: boolean;
 }
 
 // Get or create a profile for the current user
@@ -54,6 +61,9 @@ export const getOrCreateProfile = async (userId: string, defaultUsername?: strin
       backgroundImage: profile.background_image || '',
       links: links || [],
       theme: profile.theme || 'default',
+      fontFamily: profile.font_family || 'Inter',
+      fontColor: profile.font_color || '',
+      showSocialIcons: profile.show_social_icons || false,
     };
   } catch (error) {
     console.error('Error in getOrCreateProfile:', error);
@@ -94,6 +104,9 @@ export const getProfileByUsername = async (username: string): Promise<UserProfil
       backgroundImage: profile.background_image || '',
       links: links || [],
       theme: profile.theme || 'default',
+      fontFamily: profile.font_family || 'Inter',
+      fontColor: profile.font_color || '',
+      showSocialIcons: profile.show_social_icons || false,
     };
   } catch (error) {
     console.error('Error in getProfileByUsername:', error);
@@ -112,6 +125,9 @@ export const updateProfile = async (userId: string, data: Partial<UserProfile>):
     if (data.avatar !== undefined) updateData.avatar = data.avatar;
     if (data.backgroundImage !== undefined) updateData.background_image = data.backgroundImage;
     if (data.theme) updateData.theme = data.theme;
+    if (data.fontFamily) updateData.font_family = data.fontFamily;
+    if (data.fontColor !== undefined) updateData.font_color = data.fontColor;
+    if (data.showSocialIcons !== undefined) updateData.show_social_icons = data.showSocialIcons;
     
     const { error } = await supabase
       .from('profiles')
@@ -159,7 +175,11 @@ export const addLink = async (userId: string, linkData: Omit<Link, 'id' | 'posit
           title: linkData.title,
           url: linkData.url,
           icon: linkData.icon,
-          position: position
+          position: position,
+          background_color: linkData.backgroundColor,
+          text_color: linkData.textColor,
+          border_radius: linkData.borderRadius,
+          display_type: linkData.displayType
         }
       ])
       .select()
@@ -175,7 +195,17 @@ export const addLink = async (userId: string, linkData: Omit<Link, 'id' | 'posit
       description: 'Your link has been added successfully',
     });
 
-    return data;
+    return {
+      id: data.id,
+      title: data.title,
+      url: data.url,
+      icon: data.icon,
+      position: data.position,
+      backgroundColor: data.background_color,
+      textColor: data.text_color,
+      borderRadius: data.border_radius,
+      displayType: data.display_type as 'button' | 'icon',
+    };
   } catch (error) {
     console.error('Error in addLink:', error);
     throw error;
@@ -185,14 +215,20 @@ export const addLink = async (userId: string, linkData: Omit<Link, 'id' | 'posit
 // Update link
 export const updateLink = async (userId: string, linkId: string, linkData: Partial<Link>): Promise<Link> => {
   try {
+    const updateData: any = {};
+    
+    if (linkData.title !== undefined) updateData.title = linkData.title;
+    if (linkData.url !== undefined) updateData.url = linkData.url;
+    if (linkData.icon !== undefined) updateData.icon = linkData.icon;
+    if (linkData.position !== undefined) updateData.position = linkData.position;
+    if (linkData.backgroundColor !== undefined) updateData.background_color = linkData.backgroundColor;
+    if (linkData.textColor !== undefined) updateData.text_color = linkData.textColor;
+    if (linkData.borderRadius !== undefined) updateData.border_radius = linkData.borderRadius;
+    if (linkData.displayType !== undefined) updateData.display_type = linkData.displayType;
+
     const { data, error } = await supabase
       .from('links')
-      .update({
-        title: linkData.title,
-        url: linkData.url,
-        icon: linkData.icon,
-        position: linkData.position
-      })
+      .update(updateData)
       .eq('id', linkId)
       .eq('user_id', userId)
       .select()
@@ -208,7 +244,17 @@ export const updateLink = async (userId: string, linkId: string, linkData: Parti
       description: 'Your link has been updated successfully',
     });
 
-    return data;
+    return {
+      id: data.id,
+      title: data.title,
+      url: data.url,
+      icon: data.icon,
+      position: data.position,
+      backgroundColor: data.background_color,
+      textColor: data.text_color,
+      borderRadius: data.border_radius,
+      displayType: data.display_type as 'button' | 'icon',
+    };
   } catch (error) {
     console.error('Error in updateLink:', error);
     throw error;
@@ -314,7 +360,17 @@ export const reorderLinks = async (userId: string, links: Link[]): Promise<Link[
       throw error;
     }
 
-    return data;
+    return data.map(link => ({
+      id: link.id,
+      title: link.title,
+      url: link.url,
+      icon: link.icon,
+      position: link.position,
+      backgroundColor: link.background_color,
+      textColor: link.text_color,
+      borderRadius: link.border_radius,
+      displayType: link.display_type as 'button' | 'icon',
+    }));
   } catch (error) {
     console.error('Error in reorderLinks:', error);
     throw error;

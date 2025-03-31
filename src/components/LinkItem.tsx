@@ -60,12 +60,34 @@ const getSocialIcon = (iconName: string | undefined) => {
 const LinkItem = ({ link, className = '', icon }: LinkItemProps) => {
   const socialIcon = getSocialIcon(link.icon);
   
+  // Use custom styles if available, otherwise use default className
+  const customStyle = link.displayType === 'button' ? {
+    backgroundColor: link.backgroundColor || undefined,
+    color: link.textColor || undefined,
+    borderRadius: link.borderRadius || undefined,
+  } : {};
+  
+  if (link.displayType === 'icon' && socialIcon) {
+    return (
+      <a 
+        href={link.url} 
+        target="_blank" 
+        rel="noopener noreferrer"
+        className="social-icon"
+        title={link.title}
+      >
+        {socialIcon}
+      </a>
+    );
+  }
+  
   return (
     <a 
       href={link.url} 
       target="_blank" 
       rel="noopener noreferrer"
       className={`link-card ${className}`}
+      style={customStyle}
     >
       {icon && <span className="mr-2">{icon}</span>}
       {socialIcon && <span className="mr-2">{socialIcon}</span>}

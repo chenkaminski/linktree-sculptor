@@ -11,30 +11,42 @@ export type Database = {
     Tables: {
       links: {
         Row: {
+          background_color: string | null
+          border_radius: string | null
           created_at: string
+          display_type: string | null
           icon: string | null
           id: string
           position: number
+          text_color: string | null
           title: string
           updated_at: string
           url: string
           user_id: string
         }
         Insert: {
+          background_color?: string | null
+          border_radius?: string | null
           created_at?: string
+          display_type?: string | null
           icon?: string | null
           id?: string
           position: number
+          text_color?: string | null
           title: string
           updated_at?: string
           url: string
           user_id: string
         }
         Update: {
+          background_color?: string | null
+          border_radius?: string | null
           created_at?: string
+          display_type?: string | null
           icon?: string | null
           id?: string
           position?: number
+          text_color?: string | null
           title?: string
           updated_at?: string
           url?: string
@@ -67,7 +79,10 @@ export type Database = {
           bio: string | null
           created_at: string
           display_name: string | null
+          font_color: string | null
+          font_family: string | null
           id: string
+          show_social_icons: boolean | null
           theme: string | null
           updated_at: string
           username: string
@@ -78,7 +93,10 @@ export type Database = {
           bio?: string | null
           created_at?: string
           display_name?: string | null
+          font_color?: string | null
+          font_family?: string | null
           id: string
+          show_social_icons?: boolean | null
           theme?: string | null
           updated_at?: string
           username: string
@@ -89,7 +107,10 @@ export type Database = {
           bio?: string | null
           created_at?: string
           display_name?: string | null
+          font_color?: string | null
+          font_family?: string | null
           id?: string
+          show_social_icons?: boolean | null
           theme?: string | null
           updated_at?: string
           username?: string

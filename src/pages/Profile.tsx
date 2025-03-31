@@ -73,27 +73,41 @@ const Profile = () => {
   const theme = getTheme(profile.theme);
   
   // Get the icon component based on the icon name
-  const getSocialIcon = (iconName: string | undefined) => {
-    if (!iconName) return <LinkIcon size={16} />;
+  const getSocialIcon = (iconName: string | undefined, size = 16) => {
+    if (!iconName) return <LinkIcon size={size} />;
     
     const iconMap: Record<string, JSX.Element> = {
-      'facebook': <Facebook size={16} />,
-      'twitter/x': <Twitter size={16} />,
-      'twitter': <Twitter size={16} />,
-      'instagram': <Instagram size={16} />,
-      'linkedin': <Linkedin size={16} />,
-      'github': <Github size={16} />,
-      'youtube': <Youtube size={16} />,
-      'email': <Mail size={16} />,
-      'website': <Globe size={16} />,
-      'twitch': <Twitch size={16} />,
-      'dribbble': <Dribbble size={16} />,
-      'figma': <Figma size={16} />,
-      'slack': <Slack size={16} />,
+      'facebook': <Facebook size={size} />,
+      'twitter/x': <Twitter size={size} />,
+      'twitter': <Twitter size={size} />,
+      'instagram': <Instagram size={size} />,
+      'linkedin': <Linkedin size={size} />,
+      'github': <Github size={size} />,
+      'youtube': <Youtube size={size} />,
+      'email': <Mail size={size} />,
+      'website': <Globe size={size} />,
+      'twitch': <Twitch size={size} />,
+      'dribbble': <Dribbble size={size} />,
+      'figma': <Figma size={size} />,
+      'slack': <Slack size={size} />,
     };
     
-    return iconMap[iconName.toLowerCase()] || <LinkIcon size={16} />;
+    return iconMap[iconName.toLowerCase()] || <LinkIcon size={size} />;
   };
+
+  const textStyle = {
+    fontFamily: profile.fontFamily || undefined,
+    color: profile.fontColor || undefined,
+  };
+
+  // Filter social links if showSocialIcons is true
+  const socialLinks = profile.showSocialIcons 
+    ? profile.links.filter(link => link.icon && link.displayType === 'icon')
+    : [];
+    
+  const regularLinks = profile.showSocialIcons 
+    ? profile.links.filter(link => !link.icon || link.displayType !== 'icon')
+    : profile.links;
 
   return (
     <div 
@@ -115,27 +129,55 @@ const Profile = () => {
           />
         </div>
         
-        <h1 className={`text-2xl font-bold mb-2 ${theme.textColor}`}>
+        <h1 
+          className={`text-2xl font-bold mb-2 ${profile.fontColor ? '' : theme.textColor}`}
+          style={textStyle}
+        >
           {profile.displayName}
         </h1>
         
-        <p className={`text-center mb-6 max-w-xs ${theme.textColor} opacity-80`}>
+        <p 
+          className={`text-center mb-4 max-w-xs ${profile.fontColor ? 'opacity-80' : `${theme.textColor} opacity-80`}`}
+          style={textStyle}
+        >
           {profile.bio}
         </p>
         
+        {/* Social icons row */}
+        {profile.showSocialIcons && socialLinks.length > 0 && (
+          <div className="flex flex-wrap justify-center gap-3 mb-6">
+            {socialLinks.map((link) => (
+              <a 
+                key={link.id}
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-10 h-10 rounded-full flex items-center justify-center transition-transform hover:scale-110"
+                style={{
+                  backgroundColor: link.backgroundColor || '#f3f4f6',
+                  color: link.textColor || '#000000'
+                }}
+                title={link.title}
+              >
+                {getSocialIcon(link.icon, 18)}
+              </a>
+            ))}
+          </div>
+        )}
+        
         <div className="w-full space-y-3 mb-8">
-          {profile.links.map((link) => (
+          {regularLinks.map((link) => (
             <LinkItem
               key={link.id}
               link={link}
-              className={theme.buttonStyle}
-              icon={getSocialIcon(link.icon)}
+              className={link.displayType === 'button' ? theme.buttonStyle : ''}
+              icon={link.icon ? getSocialIcon(link.icon) : undefined}
             />
           ))}
           
           {profile.links.length === 0 && (
-            <div className={`text-center py-8 ${theme.textColor} opacity-80`}>
-              <p>No links available</p>
+            <div className={`text-center py-8 ${profile.fontColor ? '' : `${theme.textColor} opacity-80`}`}>
+              <p style={textStyle}>No links available</p>
             </div>
           )}
         </div>
@@ -143,7 +185,8 @@ const Profile = () => {
         <div className="mt-auto pt-8 text-center">
           <a 
             href="/"
-            className={`text-sm ${theme.textColor} opacity-70 hover:opacity-100 transition-opacity`}
+            className={`text-sm ${profile.fontColor ? 'opacity-70' : `${theme.textColor} opacity-70`} hover:opacity-100 transition-opacity`}
+            style={textStyle}
           >
             Create your own LinkTree clone
           </a>

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -6,10 +7,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LogOut, LinkIcon, User, Settings, Image as ImageIcon } from 'lucide-react';
+import { LogOut, LinkIcon, User, Settings, Image as ImageIcon, Palette } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { toast } from '@/hooks/use-toast';
 import LinkForm from '@/components/LinkForm';
 import DashboardLinkItem from '@/components/DashboardLinkItem';
+import ProfileStylesEditor from '@/components/ProfileStylesEditor';
 import { UserProfile, Link as LinkType, getOrCreateProfile, updateProfile, addLink, updateLink, deleteLink, reorderLinks } from '@/services/linkService';
 import { themes } from '@/services/themeService';
 import SocialIconPicker from '@/components/SocialIconPicker';
@@ -19,7 +22,7 @@ import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrate
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { CSS } from '@dnd-kit/utilities';
 
-const SortableLinkItem = ({ link, onEdit, onDelete }) => {
+const SortableLinkItem = ({ link, onEdit, onDelete, onStyleUpdate }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: link.id });
 
   const style = {
@@ -32,7 +35,8 @@ const SortableLinkItem = ({ link, onEdit, onDelete }) => {
       <DashboardLinkItem 
         link={link} 
         onEdit={onEdit} 
-        onDelete={onDelete} 
+        onDelete={onDelete}
+        onStyleUpdate={onStyleUpdate}
         isDragging={isDragging}
         dragHandleProps={{ ...attributes, ...listeners }}
       />
@@ -148,6 +152,23 @@ const Dashboard = () => {
       console.error('Error updating link:', error);
     }
   };
+  
+  const handleStyleUpdateLink = async (id: string, styles: Partial<LinkType>) => {
+    if (!user) return;
+    
+    try {
+      const updatedLink = await updateLink(user.id, id, styles);
+      setProfile(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          links: prev.links.map(link => link.id === id ? updatedLink : link),
+        };
+      });
+    } catch (error) {
+      console.error('Error updating link style:', error);
+    }
+  };
 
   const handleDeleteLink = async (id: string) => {
     if (!user) return;
@@ -205,6 +226,21 @@ const Dashboard = () => {
     }
   };
 
+  const handleStyleUpdate = async (styleData: Partial<UserProfile>) => {
+    if (!user || !profile) return;
+    
+    try {
+      const updatedProfile = await updateProfile(user.id, styleData);
+      setProfile(updatedProfile);
+      toast({
+        title: 'Styling updated',
+        description: 'Your styling preferences have been updated',
+      });
+    } catch (error) {
+      console.error('Error updating styling:', error);
+    }
+  };
+
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     
@@ -247,6 +283,32 @@ const Dashboard = () => {
         }
       }
     }
+  };
+
+  const renderSocialIcons = () => {
+    if (!profile) return null;
+    
+    const socialLinks = profile.links.filter(link => link.icon && 
+      (link.displayType === 'icon' || link.icon));
+      
+    if (socialLinks.length === 0) return null;
+    
+    return (
+      <div className="flex flex-wrap justify-center gap-3 mb-6">
+        {socialLinks.slice(0, 5).map((link, index) => (
+          <div 
+            key={index}
+            className="w-8 h-8 rounded-full flex items-center justify-center"
+            style={{
+              backgroundColor: link.backgroundColor || '#f3f4f6',
+              color: link.textColor || '#000000'
+            }}
+          >
+            <span className="text-xs">🔗</span>
+          </div>
+        ))}
+      </div>
+    );
   };
 
   if (loading) {
@@ -342,6 +404,7 @@ const Dashboard = () => {
                               link={link}
                               onEdit={handleEditLink}
                               onDelete={handleDeleteLink}
+                              onStyleUpdate={handleStyleUpdateLink}
                             />
                           ))}
                         </SortableContext>
@@ -398,18 +461,38 @@ const Dashboard = () => {
                               className="w-full h-full object-cover" 
                             />
                           </div>
-                          <h3 className={`text-xl font-semibold mb-1 ${profile?.backgroundImage ? 'text-white' : themes.find(t => t.id === profile?.theme)?.textColor || 'text-white'}`}>
+                          <h3 
+                            className={`text-xl font-semibold mb-1 ${profile?.backgroundImage ? 'text-white' : themes.find(t => t.id === profile?.theme)?.textColor || 'text-white'}`}
+                            style={{ 
+                              fontFamily: profile?.fontFamily || 'Inter',
+                              color: profile?.fontColor || undefined
+                            }}
+                          >
                             {profile?.displayName || 'Your Name'}
                           </h3>
-                          <p className={`text-sm mb-6 text-center ${profile?.backgroundImage ? 'text-white/80' : (themes.find(t => t.id === profile?.theme)?.textColor || 'text-white') + ' opacity-80'}`}>
+                          <p 
+                            className={`text-sm mb-6 text-center ${profile?.backgroundImage ? 'text-white/80' : (themes.find(t => t.id === profile?.theme)?.textColor || 'text-white') + ' opacity-80'}`}
+                            style={{ 
+                              fontFamily: profile?.fontFamily || 'Inter',
+                              color: profile?.fontColor ? profile?.fontColor + '99' : undefined
+                            }}
+                          >
                             {profile?.bio || 'Your bio goes here'}
                           </p>
                           
+                          {profile?.showSocialIcons && renderSocialIcons()}
+                          
                           <div className="w-full max-w-sm space-y-3">
-                            {profile?.links.map((link) => (
+                            {profile?.links.filter(l => !profile.showSocialIcons || l.displayType !== 'icon').map((link) => (
                               <div 
                                 key={link.id}
                                 className={`w-full py-3 px-5 rounded-lg flex items-center justify-center gap-2 font-medium ${profile?.backgroundImage ? 'bg-white/20 backdrop-blur-sm text-white' : themes.find(t => t.id === profile?.theme)?.buttonStyle || 'bg-white text-gray-800'}`}
+                                style={{
+                                  backgroundColor: link.backgroundColor,
+                                  color: link.textColor,
+                                  borderRadius: link.borderRadius,
+                                  fontFamily: profile?.fontFamily || 'Inter',
+                                }}
                               >
                                 {link.title}
                               </div>
@@ -433,6 +516,23 @@ const Dashboard = () => {
           <TabsContent value="appearance">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <div className="md:col-span-2">
+                <Card className="mb-6">
+                  <CardHeader>
+                    <CardTitle>Typography & Layout</CardTitle>
+                    <CardDescription>
+                      Customize how your text and links appear
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {profile && (
+                      <ProfileStylesEditor
+                        profile={profile}
+                        onUpdate={handleStyleUpdate}
+                      />
+                    )}
+                  </CardContent>
+                </Card>
+                
                 <Card className="mb-6">
                   <CardHeader>
                     <CardTitle>Background Image</CardTitle>
@@ -514,18 +614,38 @@ const Dashboard = () => {
                               className="w-full h-full object-cover" 
                             />
                           </div>
-                          <h3 className={`text-xl font-semibold mb-1 ${profile?.backgroundImage ? 'text-white' : themes.find(t => t.id === profile?.theme)?.textColor || 'text-white'}`}>
+                          <h3 
+                            className={`text-xl font-semibold mb-1 ${profile?.backgroundImage ? 'text-white' : themes.find(t => t.id === profile?.theme)?.textColor || 'text-white'}`}
+                            style={{ 
+                              fontFamily: profile?.fontFamily || 'Inter',
+                              color: profile?.fontColor || undefined
+                            }}
+                          >
                             {profile?.displayName || 'Your Name'}
                           </h3>
-                          <p className={`text-sm mb-6 text-center ${profile?.backgroundImage ? 'text-white/80' : (themes.find(t => t.id === profile?.theme)?.textColor || 'text-white') + ' opacity-80'}`}>
+                          <p 
+                            className={`text-sm mb-6 text-center ${profile?.backgroundImage ? 'text-white/80' : (themes.find(t => t.id === profile?.theme)?.textColor || 'text-white') + ' opacity-80'}`}
+                            style={{ 
+                              fontFamily: profile?.fontFamily || 'Inter',
+                              color: profile?.fontColor ? profile?.fontColor + '99' : undefined
+                            }}
+                          >
                             {profile?.bio || 'Your bio goes here'}
                           </p>
                           
+                          {profile?.showSocialIcons && renderSocialIcons()}
+                          
                           <div className="w-full max-w-sm space-y-3">
-                            {profile?.links.map((link) => (
+                            {profile?.links.filter(l => !profile.showSocialIcons || l.displayType !== 'icon').map((link) => (
                               <div 
                                 key={link.id}
                                 className={`w-full py-3 px-5 rounded-lg flex items-center justify-center gap-2 font-medium ${profile?.backgroundImage ? 'bg-white/20 backdrop-blur-sm text-white' : themes.find(t => t.id === profile?.theme)?.buttonStyle || 'bg-white text-gray-800'}`}
+                                style={{
+                                  backgroundColor: link.backgroundColor,
+                                  color: link.textColor,
+                                  borderRadius: link.borderRadius,
+                                  fontFamily: profile?.fontFamily || 'Inter',
+                                }}
                               >
                                 {link.title}
                               </div>
