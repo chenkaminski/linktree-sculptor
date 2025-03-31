@@ -7,7 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import AvatarCropper from './AvatarCropper';
 
 interface ImageUploaderProps {
-  type: 'avatar' | 'background';
+  type: 'avatar' | 'background' | 'logo';
   currentImage: string | null;
   userId: string;
   onImageUploaded: (url: string) => void;
@@ -141,6 +141,46 @@ const ImageUploader = ({ type, currentImage, userId, onImageUploaded }: ImageUpl
               </Button>
             )}
           </div>
+        </div>
+      ) : type === 'logo' ? (
+        <div className="space-y-4">
+          {currentImage && (
+            <div className="relative w-48 h-24 mx-auto rounded-md overflow-hidden border border-gray-200">
+              <img 
+                src={currentImage} 
+                alt="Logo"
+                className="w-full h-full object-contain"
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                className="absolute top-2 right-2 bg-white/80"
+                onClick={removeImage}
+              >
+                <X size={16} className="mr-2" />
+                Remove
+              </Button>
+            </div>
+          )}
+          
+          <Button 
+            variant="outline" 
+            disabled={uploading}
+            asChild
+            className="w-full"
+          >
+            <label className="cursor-pointer">
+              <Upload size={16} className="mr-2" />
+              {uploading ? 'Uploading...' : currentImage ? 'Change Logo' : 'Upload Logo'}
+              <input
+                type="file"
+                className="hidden"
+                accept="image/*"
+                onChange={handleImageSelect}
+                disabled={uploading}
+              />
+            </label>
+          </Button>
         </div>
       ) : (
         <div className="space-y-4">

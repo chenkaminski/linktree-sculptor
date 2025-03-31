@@ -153,7 +153,7 @@ const LinkItem = ({ link, className = '', icon }: LinkItemProps) => {
       {icon && <span className="mr-2">{icon}</span>}
       {socialIcon && <span className="mr-2">{socialIcon}</span>}
       {link.title}
-      <ExternalLink size={16} className="ml-1" />
+      {/* <ExternalLink size={16} className="ml-1" /> */}
     </a>
   );
 };

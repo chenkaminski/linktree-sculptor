@@ -465,6 +465,30 @@ const Dashboard = () => {
     }
   };
 
+  const handleLogoChange = async (url: string) => {
+    if (!user || !profile) return;
+    
+    try {
+      const updatedProfile = await updateProfile(user.id, {
+        logo: url
+      });
+      
+      setProfile(updatedProfile);
+      
+      toast({
+        title: 'Logo updated',
+        description: 'Your profile logo has been updated successfully',
+      });
+    } catch (error) {
+      console.error('Error updating logo:', error);
+      toast({
+        title: 'Update failed',
+        description: 'There was an error updating your logo',
+        variant: 'destructive',
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -1113,6 +1137,25 @@ const Dashboard = () => {
                         currentImage={profile.avatar}
                         userId={user.id}
                         onImageUploaded={handleAvatarChange}
+                      />
+                    )}
+                  </CardContent>
+                </Card>
+                
+                <Card className="mb-6">
+                  <CardHeader>
+                    <CardTitle>Profile Logo</CardTitle>
+                    <CardDescription>
+                      Upload a logo to be displayed at the bottom of your profile page
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {user && profile && (
+                      <ImageUploader
+                        type="logo"
+                        currentImage={profile.logo || null}
+                        userId={user.id}
+                        onImageUploaded={handleLogoChange}
                       />
                     )}
                   </CardContent>

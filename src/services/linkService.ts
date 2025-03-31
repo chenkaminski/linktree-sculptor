@@ -35,6 +35,7 @@ export interface UserProfile {
   useInfiniteSlider?: boolean;
   imageLayout?: 'row' | 'column' | 'grid';
   gridColumns?: 2 | 3 | 4;
+  logo?: string;
 }
 
 // Get or create a profile for the current user
@@ -103,6 +104,7 @@ console.log("imagesError",imagesError)
       useInfiniteSlider: profile.use_infinite_slider || false,
       imageLayout: (profile.image_layout as 'row' | 'column' | 'grid') || 'row',
       gridColumns: (profile.grid_columns as 2 | 3 | 4) || 2,
+      logo: profile.logo || '',
     };
   } catch (error) {
     console.error('Error in getOrCreateProfile:', error);
@@ -175,6 +177,7 @@ export const getProfileByUsername = async (username: string): Promise<UserProfil
       useInfiniteSlider: profile.use_infinite_slider || false,
       imageLayout: (profile.image_layout as 'row' | 'column' | 'grid') || 'row',
       gridColumns: (profile.grid_columns as 2 | 3 | 4) || 2,
+      logo: profile.logo || '',
     };
   } catch (error) {
     console.error('Error in getProfileByUsername:', error);
@@ -198,6 +201,7 @@ export const updateProfile = async (userId: string, data: Partial<UserProfile>):
     if (data.showSocialIcons !== undefined) updateData.show_social_icons = data.showSocialIcons;
     if (data.imageLayout !== undefined) updateData.image_layout = data.imageLayout;
     if (data.gridColumns !== undefined) updateData.grid_columns = data.gridColumns;
+    if (data.logo !== undefined) updateData.logo = data.logo;
     
     const { error } = await supabase
       .from('profiles')

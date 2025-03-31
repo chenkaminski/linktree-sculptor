@@ -142,7 +142,7 @@ const Profile = () => {
         )}
         
         {/* Regular links and videos should come before images */}
-        <div className="w-full space-y-3 mb-8">
+        <div className="w-[80%] space-y-3 mb-8">
           {/* Regular links */}
           {regularLinks.map((link) => (
             <LinkItem
@@ -230,6 +230,16 @@ const Profile = () => {
         )}
         
         <div className="mt-auto pt-8 text-center">
+          {/* Logo display */}
+          {profile.logo && (
+            <div className="mb-4 flex justify-center">
+              <img 
+                src={profile.logo}
+                alt={`${profile.displayName} logo`}
+                className="max-h-12 max-w-[180px] object-contain"
+              />
+            </div>
+          )}
           <a 
             href="/"
             className={`text-sm ${profile.fontColor ? 'opacity-70' : `${theme.textColor} opacity-70`} hover:opacity-100 transition-opacity`}
