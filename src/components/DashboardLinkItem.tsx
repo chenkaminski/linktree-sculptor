@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Link } from '@/services/linkService';
 import { Button } from '@/components/ui/button';
@@ -9,7 +8,7 @@ import LinkStylesEditor from './LinkStylesEditor';
 
 interface DashboardLinkItemProps {
   link: Link;
-  onEdit: (id: string, data: { title: string; url: string; displayType?: 'button' | 'icon' | 'video' }) => void;
+  onEdit: (id: string, data: { title: string; url: string; display_type?: 'button' | 'icon' | 'video' }) => void;
   onDelete: (id: string) => void;
   onStyleUpdate: (id: string, styles: Partial<Link>) => void;
   isDragging?: boolean;
@@ -26,8 +25,8 @@ const DashboardLinkItem = ({
 }: DashboardLinkItemProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isStyleEditing, setIsStyleEditing] = useState(false);
-
-  const handleEdit = (data: { title: string; url: string; displayType?: 'button' | 'icon' | 'video' }) => {
+  console.log("link",link)
+  const handleEdit = (data: { title: string; url: string; display_type?: 'button' | 'icon' | 'video' }) => {
     onEdit(link.id, data);
     setIsEditing(false);
   };
@@ -52,7 +51,7 @@ const DashboardLinkItem = ({
         defaultValues={{ 
           title: link.title, 
           url: link.url,
-          displayType: link.displayType as 'button' | 'icon' | 'video'
+          display_type: link.display_type as 'button' | 'icon' | 'video'
         }}
         isEdit
       />
@@ -81,9 +80,9 @@ const DashboardLinkItem = ({
               className="w-8 h-8 rounded mr-3 flex items-center justify-center"
               style={linkStyle}
             >
-              {link.displayType === 'icon' && link.icon ? (
+              {link.display_type === 'icon' && link.icon ? (
                 <span className="text-xs">🔗</span>
-              ) : link.displayType === 'video' ? (
+              ) : link.display_type === 'video' ? (
                 <Video size={16} />
               ) : (
                 <span className="text-xs">Aa</span>
@@ -92,7 +91,7 @@ const DashboardLinkItem = ({
             <div>
               <h3 className="font-medium">{link.title}</h3>
               <p className="text-sm text-gray-500 truncate">
-                {link.displayType === 'video' ? '📹 ' : ''}{link.url}
+                {link.display_type === 'video' ? '📹 ' : ''}{link.url}
               </p>
             </div>
           </div>

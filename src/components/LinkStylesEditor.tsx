@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Link } from '@/services/linkService';
 import { Button } from '@/components/ui/button';
@@ -25,7 +24,7 @@ const LinkStylesEditor = ({ link, onSubmit, onCancel }: LinkStylesEditorProps) =
   const [backgroundColor, setBackgroundColor] = useState(link.backgroundColor || '#f3f4f6');
   const [textColor, setTextColor] = useState(link.textColor || '#000000');
   const [borderRadius, setBorderRadius] = useState(link.borderRadius || '0.5rem');
-  const [displayType, setDisplayType] = useState<'button' | 'icon' | 'video'>(link.displayType as 'button' | 'icon' | 'video' || 'button');
+  const [display_type, setDisplayType] = useState<'button' | 'icon' | 'video'>(link.display_type as 'button' | 'icon' | 'video' || 'button');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,7 +33,7 @@ const LinkStylesEditor = ({ link, onSubmit, onCancel }: LinkStylesEditorProps) =
       backgroundColor,
       textColor,
       borderRadius,
-      displayType
+      display_type
     });
   };
 
@@ -84,7 +83,7 @@ const LinkStylesEditor = ({ link, onSubmit, onCancel }: LinkStylesEditorProps) =
           <div>
             <Label className="mb-2 block">Display Type</Label>
             <RadioGroup 
-              value={displayType} 
+              value={display_type} 
               onValueChange={handleDisplayTypeChange}
               className="flex space-x-4"
             >
@@ -101,7 +100,7 @@ const LinkStylesEditor = ({ link, onSubmit, onCancel }: LinkStylesEditorProps) =
                 <Label htmlFor="display-video">Video</Label>
               </div>
             </RadioGroup>
-            {displayType === 'video' && (
+            {display_type === 'video' && (
               <p className="text-xs text-gray-500 mt-2">
                 Video mode will embed content from YouTube, Vimeo, TikTok, or Instagram
               </p>
@@ -109,7 +108,7 @@ const LinkStylesEditor = ({ link, onSubmit, onCancel }: LinkStylesEditorProps) =
           </div>
           
           {/* Only show color and style options for button and icon types */}
-          {displayType !== 'video' && (
+          {display_type !== 'video' && (
             <>
               <div>
                 <Label className="mb-2 block">Color Presets</Label>
@@ -203,7 +202,7 @@ const LinkStylesEditor = ({ link, onSubmit, onCancel }: LinkStylesEditorProps) =
             </>
           )}
           
-          {displayType === 'video' && (
+          {display_type === 'video' && (
             <div className="p-4 rounded-lg border mt-4">
               <p className="text-sm text-gray-500 mb-2">Video Preview:</p>
               <div className="flex items-center justify-center p-4 bg-gray-100 rounded">

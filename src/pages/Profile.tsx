@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { UserProfile, getProfileByUsername } from '@/services/linkService';
@@ -79,14 +78,11 @@ const Profile = () => {
 
   // Split links into social icons, videos, and regular links
   const socialLinks = profile.showSocialIcons 
-    ? profile.links.filter(link => link.displayType === 'icon')
+    ? profile.links.filter(link => link.display_type === 'icon')
     : [];
     
-  const videoLinks = profile.links.filter(link => link.displayType === 'video');
-    
-  const regularLinks = profile.showSocialIcons 
-    ? profile.links.filter(link => link.displayType !== 'icon' && link.displayType !== 'video')
-    : profile.links.filter(link => link.displayType !== 'video');
+  const videoLinks = profile.links.filter(link => link.display_type === 'video');
+  const regularLinks = profile.links.filter(link => link.display_type === 'button');
 
   return (
     <div 
@@ -150,7 +146,7 @@ const Profile = () => {
             <LinkItem
               key={link.id}
               link={link}
-              className={link.displayType === 'button' ? theme.buttonStyle : ''}
+              className={theme.buttonStyle}
             />
           ))}
           

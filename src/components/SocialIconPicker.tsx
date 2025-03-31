@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
@@ -44,7 +43,7 @@ const socialIcons = [
 ];
 
 interface SocialIconPickerProps {
-  onAddLink: (link: { title: string; url: string; icon: string; displayType: 'button' | 'icon' }) => void;
+  onAddLink: (link: { title: string; url: string; icon: string; display_type: 'button' | 'icon' }) => void;
 }
 
 const SocialIconPicker = ({ onAddLink }: SocialIconPickerProps) => {
@@ -75,7 +74,7 @@ const SocialIconPicker = ({ onAddLink }: SocialIconPickerProps) => {
       title,
       url,
       icon: selectedIcon.toLowerCase(),
-      displayType: 'icon'
+      display_type: 'icon'
     });
     
     // Reset form

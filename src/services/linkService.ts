@@ -11,7 +11,7 @@ export interface Link {
   backgroundColor?: string;
   textColor?: string;
   borderRadius?: string;
-  displayType?: 'button' | 'icon' | 'video';
+  display_type?: 'button' | 'icon' | 'video';
 }
 
 export interface UserProfile {
@@ -165,7 +165,7 @@ export const addLink = async (userId: string, linkData: Omit<Link, 'id' | 'posit
     }
 
     const position = count || 0;
-
+    console.log("linkData.display_type",linkData)
     const { data, error } = await supabase
       .from('links')
       .insert([
@@ -178,7 +178,7 @@ export const addLink = async (userId: string, linkData: Omit<Link, 'id' | 'posit
           background_color: linkData.backgroundColor,
           text_color: linkData.textColor,
           border_radius: linkData.borderRadius,
-          display_type: linkData.displayType
+          display_type: linkData.display_type
         }
       ])
       .select()
@@ -203,7 +203,7 @@ export const addLink = async (userId: string, linkData: Omit<Link, 'id' | 'posit
       backgroundColor: data.background_color,
       textColor: data.text_color,
       borderRadius: data.border_radius,
-      displayType: data.display_type as 'button' | 'icon' | 'video',
+      display_type: data.display_type as 'button' | 'icon' | 'video',
     };
   } catch (error) {
     console.error('Error in addLink:', error);
@@ -223,7 +223,7 @@ export const updateLink = async (userId: string, linkId: string, linkData: Parti
     if (linkData.backgroundColor !== undefined) updateData.background_color = linkData.backgroundColor;
     if (linkData.textColor !== undefined) updateData.text_color = linkData.textColor;
     if (linkData.borderRadius !== undefined) updateData.border_radius = linkData.borderRadius;
-    if (linkData.displayType !== undefined) updateData.display_type = linkData.displayType;
+    if (linkData.display_type !== undefined) updateData.display_type = linkData.display_type;
 
     const { data, error } = await supabase
       .from('links')
@@ -252,7 +252,7 @@ export const updateLink = async (userId: string, linkId: string, linkData: Parti
       backgroundColor: data.background_color,
       textColor: data.text_color,
       borderRadius: data.border_radius,
-      displayType: data.display_type as 'button' | 'icon' | 'video',
+      display_type: data.display_type as 'button' | 'icon' | 'video',
     };
   } catch (error) {
     console.error('Error in updateLink:', error);
@@ -368,7 +368,7 @@ export const reorderLinks = async (userId: string, links: Link[]): Promise<Link[
       backgroundColor: link.background_color,
       textColor: link.text_color,
       borderRadius: link.border_radius,
-      displayType: link.display_type as 'button' | 'icon' | 'video',
+      display_type: link.display_type as 'button' | 'icon' | 'video',
     }));
   } catch (error) {
     console.error('Error in reorderLinks:', error);

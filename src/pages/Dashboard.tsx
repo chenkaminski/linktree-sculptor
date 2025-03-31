@@ -438,7 +438,7 @@ const Dashboard = () => {
                           items={profile.links.map(link => link.id)}
                           strategy={verticalListSortingStrategy}
                         >
-                          {profile.links.map((link) => (
+                          {/* {profile.links.map((link) => (
                             <SortableLinkItem
                               key={link.id}
                               link={link}
@@ -446,7 +446,20 @@ const Dashboard = () => {
                               onDelete={handleDeleteLink}
                               onStyleUpdate={handleStyleUpdateLink}
                             />
-                          ))}
+                          ))} */}
+
+{profile.links
+  .filter(link => link.display_type === 'button')
+  .map((link) => (
+    <SortableLinkItem
+      key={link.id}
+      link={link}
+      onEdit={handleEditLink}
+      onDelete={handleDeleteLink}
+      onStyleUpdate={handleStyleUpdateLink}
+    />
+  ))
+}
                         </SortableContext>
                       </DndContext>
                     )}
@@ -575,7 +588,7 @@ const Dashboard = () => {
                       </Label>
                     </div>
                     
-                    {profile?.links.filter(link => link.icon && link.displayType === 'icon').length === 0 ? (
+                    {profile?.links.filter(link => link.icon && link.display_type === 'icon').length === 0 ? (
                       <div className="text-center py-8">
                         <p className="text-gray-500 mb-4">You haven't added any social icons yet</p>
                         <SocialIconPicker onAddLink={handleAddSocialLink} />
@@ -592,10 +605,10 @@ const Dashboard = () => {
                               modifiers={[restrictToVerticalAxis]}
                             >
                               <SortableContext 
-                                items={profile?.links.filter(link => link.displayType === 'icon').map(link => link.id) || []}
+                                items={profile?.links.filter(link => link.display_type === 'icon').map(link => link.id) || []}
                                 strategy={verticalListSortingStrategy}
                               >
-                                {profile?.links.filter(link => link.displayType === 'icon').map((link) => (
+                                {profile?.links.filter(link => link.display_type === 'icon').map((link) => (
                                   <SortableLinkItem
                                     key={link.id}
                                     link={link}
@@ -664,7 +677,7 @@ const Dashboard = () => {
                           
                           {profile?.showSocialIcons && (
                             <div className="flex flex-wrap justify-center gap-3 mb-6">
-                              {profile?.links.filter(link => link.displayType === 'icon').map((link, index) => (
+                              {profile?.links.filter(link => link.display_type === 'icon').map((link, index) => (
                                 <div 
                                   key={index}
                                   className="w-10 h-10 rounded-full flex items-center justify-center"
