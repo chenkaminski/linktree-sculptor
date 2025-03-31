@@ -119,13 +119,12 @@ const Dashboard = () => {
     }
   };
   
-  const handleAddSocialLink = async (data: { title: string; url: string; icon: string }) => {
+  const handleAddSocialLink = async (data: { title: string; url: string; icon: string; displayType: 'button' | 'icon' }) => {
     if (!user) return;
     
     try {
       const newLink = await addLink(user.id, {
         ...data,
-        displayType: 'icon'
       });
       
       setProfile(prev => {
@@ -785,7 +784,7 @@ const Dashboard = () => {
                           <div className="w-20 h-20 rounded-full overflow-hidden mb-4 bg-white/20">
                             <img 
                               src={profile?.avatar} 
-                              alt={profile?.displayName || 'Avatar'} 
+                              alt={profileForm.displayName || 'Avatar'} 
                               className="w-full h-full object-cover" 
                             />
                           </div>
@@ -796,7 +795,7 @@ const Dashboard = () => {
                               color: profile?.fontColor || undefined
                             }}
                           >
-                            {profile?.displayName || 'Your Name'}
+                            {profileForm.displayName || 'Your Name'}
                           </h3>
                           <p 
                             className={`text-sm mb-6 text-center ${profile?.backgroundImage ? 'text-white/80' : (themes.find(t => t.id === profile?.theme)?.textColor || 'text-white') + ' opacity-80'}`}
@@ -805,7 +804,7 @@ const Dashboard = () => {
                               color: profile?.fontColor ? profile?.fontColor + '99' : undefined
                             }}
                           >
-                            {profile?.bio || 'Your bio goes here'}
+                            {profileForm.bio || 'Your bio goes here'}
                           </p>
                           
                           {profile?.showSocialIcons && renderSocialIcons()}

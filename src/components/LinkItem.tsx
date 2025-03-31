@@ -73,8 +73,9 @@ const LinkItem = ({ link, className = '', icon }: LinkItemProps) => {
         href={link.url} 
         target="_blank" 
         rel="noopener noreferrer"
-        className="social-icon"
+        className="social-icon-link"
         title={link.title}
+        style={customStyle}
       >
         {socialIcon}
       </a>

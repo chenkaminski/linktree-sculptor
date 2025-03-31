@@ -72,29 +72,6 @@ const Profile = () => {
 
   const theme = getTheme(profile.theme);
   
-  // Get the icon component based on the icon name
-  const getSocialIcon = (iconName: string | undefined, size = 16) => {
-    if (!iconName) return <LinkIcon size={size} />;
-    
-    const iconMap: Record<string, JSX.Element> = {
-      'facebook': <Facebook size={size} />,
-      'twitter/x': <Twitter size={size} />,
-      'twitter': <Twitter size={size} />,
-      'instagram': <Instagram size={size} />,
-      'linkedin': <Linkedin size={size} />,
-      'github': <Github size={size} />,
-      'youtube': <Youtube size={size} />,
-      'email': <Mail size={size} />,
-      'website': <Globe size={size} />,
-      'twitch': <Twitch size={size} />,
-      'dribbble': <Dribbble size={size} />,
-      'figma': <Figma size={size} />,
-      'slack': <Slack size={size} />,
-    };
-    
-    return iconMap[iconName.toLowerCase()] || <LinkIcon size={size} />;
-  };
-
   const textStyle = {
     fontFamily: profile.fontFamily || undefined,
     color: profile.fontColor || undefined,
@@ -102,11 +79,11 @@ const Profile = () => {
 
   // Split links into social icons and regular links
   const socialLinks = profile.showSocialIcons 
-    ? profile.links.filter(link => link.icon && link.displayType === 'icon')
+    ? profile.links.filter(link => link.displayType === 'icon')
     : [];
     
   const regularLinks = profile.showSocialIcons 
-    ? profile.links.filter(link => !link.icon || link.displayType !== 'icon')
+    ? profile.links.filter(link => link.displayType !== 'icon')
     : profile.links;
 
   return (
@@ -171,7 +148,6 @@ const Profile = () => {
               key={link.id}
               link={link}
               className={link.displayType === 'button' ? theme.buttonStyle : ''}
-              icon={link.icon ? getSocialIcon(link.icon) : undefined}
             />
           ))}
           
@@ -194,6 +170,41 @@ const Profile = () => {
       </div>
     </div>
   );
+};
+
+// Helper function to get social icons
+const getSocialIcon = (iconName: string | undefined, size = 16) => {
+  if (!iconName) return <LinkIcon size={size} />;
+  
+  switch (iconName.toLowerCase()) {
+    case 'facebook':
+      return <Facebook size={size} />;
+    case 'twitter':
+    case 'twitter/x':
+      return <Twitter size={size} />;
+    case 'instagram':
+      return <Instagram size={size} />;
+    case 'linkedin':
+      return <Linkedin size={size} />;
+    case 'github':
+      return <Github size={size} />;
+    case 'youtube':
+      return <Youtube size={size} />;
+    case 'email':
+      return <Mail size={size} />;
+    case 'website':
+      return <Globe size={size} />;
+    case 'twitch':
+      return <Twitch size={size} />;
+    case 'dribbble':
+      return <Dribbble size={size} />;
+    case 'figma':
+      return <Figma size={size} />;
+    case 'slack':
+      return <Slack size={size} />;
+    default:
+      return <LinkIcon size={size} />;
+  }
 };
 
 export default Profile;

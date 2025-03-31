@@ -31,7 +31,7 @@ const socialIcons = [
   { name: 'Facebook', icon: <Facebook size={24} />, prefix: 'https://facebook.com/' },
   { name: 'Twitter/X', icon: <Twitter size={24} />, prefix: 'https://twitter.com/' },
   { name: 'Instagram', icon: <Instagram size={24} />, prefix: 'https://instagram.com/' },
-  { name: 'LinkedIn', icon: <Linkedin size={24} />, prefix: 'https://linkedin.com/in/' },
+  { name: 'LinkedIn', icon: <Linkedin size={24} />, prefix: 'https://linkedin.com/' },
   { name: 'GitHub', icon: <Github size={24} />, prefix: 'https://github.com/' },
   { name: 'YouTube', icon: <Youtube size={24} />, prefix: 'https://youtube.com/' },
   { name: 'Email', icon: <Mail size={24} />, prefix: 'mailto:' },
@@ -44,7 +44,7 @@ const socialIcons = [
 ];
 
 interface SocialIconPickerProps {
-  onAddLink: (link: { title: string; url: string; icon: string }) => void;
+  onAddLink: (link: { title: string; url: string; icon: string; displayType: 'button' | 'icon' }) => void;
 }
 
 const SocialIconPicker = ({ onAddLink }: SocialIconPickerProps) => {
@@ -75,6 +75,7 @@ const SocialIconPicker = ({ onAddLink }: SocialIconPickerProps) => {
       title,
       url,
       icon: selectedIcon.toLowerCase(),
+      displayType: 'icon'
     });
     
     // Reset form
