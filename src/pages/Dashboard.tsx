@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -7,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LogOut, LinkIcon, User, Settings, Image as ImageIcon, Palette } from 'lucide-react';
+import { LogOut, LinkIcon, User, Settings, Share2, Palette } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import LinkForm from '@/components/LinkForm';
@@ -21,6 +20,7 @@ import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, us
 import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { CSS } from '@dnd-kit/utilities';
+import { Switch } from '@/components/ui/switch';
 
 const SortableLinkItem = ({ link, onEdit, onDelete, onStyleUpdate }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: link.id });
@@ -123,7 +123,11 @@ const Dashboard = () => {
     if (!user) return;
     
     try {
-      const newLink = await addLink(user.id, data);
+      const newLink = await addLink(user.id, {
+        ...data,
+        displayType: 'icon'
+      });
+      
       setProfile(prev => {
         if (!prev) return prev;
         return {
@@ -131,8 +135,18 @@ const Dashboard = () => {
           links: [...prev.links, newLink],
         };
       });
+      
+      toast({
+        title: 'Social link added',
+        description: `${data.title} has been added to your profile`,
+      });
     } catch (error) {
       console.error('Error adding social link:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to add social link',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -285,6 +299,29 @@ const Dashboard = () => {
     }
   };
 
+  const toggleSocialIconsDisplay = async (enabled: boolean) => {
+    if (!user || !profile) return;
+    
+    try {
+      const updatedProfile = await updateProfile(user.id, {
+        showSocialIcons: enabled
+      });
+      setProfile(updatedProfile);
+      
+      toast({
+        title: `Social icons ${enabled ? 'enabled' : 'disabled'}`,
+        description: `Social icons will ${enabled ? 'now' : 'no longer'} be displayed below your bio`
+      });
+    } catch (error) {
+      console.error('Error updating social icons display:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update social icons settings',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const renderSocialIcons = () => {
     if (!profile) return null;
     
@@ -357,8 +394,12 @@ const Dashboard = () => {
               <LinkIcon size={16} className="mr-2" />
               Links
             </TabsTrigger>
+            <TabsTrigger value="social">
+              <Share2 size={16} className="mr-2" />
+              Social Icons
+            </TabsTrigger>
             <TabsTrigger value="appearance">
-              <Settings size={16} className="mr-2" />
+              <Palette size={16} className="mr-2" />
               Appearance
             </TabsTrigger>
             <TabsTrigger value="profile">
@@ -504,6 +545,140 @@ const Dashboard = () => {
                               </div>
                             )}
                           </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="social" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="md:col-span-2 space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Social Icons</CardTitle>
+                    <CardDescription>
+                      Add social media profiles to display as icons below your bio
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center space-x-2 mb-6">
+                      <Switch 
+                        checked={profile?.showSocialIcons || false} 
+                        onCheckedChange={toggleSocialIconsDisplay} 
+                        id="show-social-icons"
+                      />
+                      <Label htmlFor="show-social-icons">
+                        Show social icons below your bio
+                      </Label>
+                    </div>
+                    
+                    {profile?.links.filter(link => link.icon && link.displayType === 'icon').length === 0 ? (
+                      <div className="text-center py-8">
+                        <p className="text-gray-500 mb-4">You haven't added any social icons yet</p>
+                        <SocialIconPicker onAddLink={handleAddSocialLink} />
+                      </div>
+                    ) : (
+                      <>
+                        <div className="space-y-4 mb-6">
+                          <h3 className="text-sm font-medium">Your social icons</h3>
+                          <div className="grid grid-cols-1 gap-3">
+                            <DndContext 
+                              sensors={sensors}
+                              collisionDetection={closestCenter}
+                              onDragEnd={handleDragEnd}
+                              modifiers={[restrictToVerticalAxis]}
+                            >
+                              <SortableContext 
+                                items={profile?.links.filter(link => link.displayType === 'icon').map(link => link.id) || []}
+                                strategy={verticalListSortingStrategy}
+                              >
+                                {profile?.links.filter(link => link.displayType === 'icon').map((link) => (
+                                  <SortableLinkItem
+                                    key={link.id}
+                                    link={link}
+                                    onEdit={handleEditLink}
+                                    onDelete={handleDeleteLink}
+                                    onStyleUpdate={handleStyleUpdateLink}
+                                  />
+                                ))}
+                              </SortableContext>
+                            </DndContext>
+                          </div>
+                        </div>
+                        <SocialIconPicker onAddLink={handleAddSocialLink} />
+                      </>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+              
+              <div>
+                <div className="sticky top-8">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Preview</CardTitle>
+                      <CardDescription>
+                        See how your social icons look
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="border border-gray-200 rounded-lg h-[500px] overflow-hidden">
+                        <div 
+                          className="h-full w-full p-8 flex flex-col items-center overflow-y-auto"
+                          style={profile?.backgroundImage ? {
+                            backgroundImage: `url(${profile.backgroundImage})`,
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center',
+                          } : {
+                            background: themes.find(t => t.id === profile?.theme)?.background || themes[0].background
+                          }}
+                        >
+                          <div className="w-20 h-20 rounded-full overflow-hidden mb-4 bg-white/20">
+                            <img 
+                              src={profile?.avatar} 
+                              alt={profile?.displayName || 'Avatar'} 
+                              className="w-full h-full object-cover" 
+                            />
+                          </div>
+                          <h3 
+                            className={`text-xl font-semibold mb-1 ${profile?.backgroundImage ? 'text-white' : themes.find(t => t.id === profile?.theme)?.textColor || 'text-white'}`}
+                            style={{ 
+                              fontFamily: profile?.fontFamily || 'Inter',
+                              color: profile?.fontColor || undefined
+                            }}
+                          >
+                            {profile?.displayName || 'Your Name'}
+                          </h3>
+                          <p 
+                            className={`text-sm mb-6 text-center ${profile?.backgroundImage ? 'text-white/80' : (themes.find(t => t.id === profile?.theme)?.textColor || 'text-white') + ' opacity-80'}`}
+                            style={{ 
+                              fontFamily: profile?.fontFamily || 'Inter',
+                              color: profile?.fontColor ? profile?.fontColor + '99' : undefined
+                            }}
+                          >
+                            {profile?.bio || 'Your bio goes here'}
+                          </p>
+                          
+                          {profile?.showSocialIcons && (
+                            <div className="flex flex-wrap justify-center gap-3 mb-6">
+                              {profile?.links.filter(link => link.displayType === 'icon').map((link, index) => (
+                                <div 
+                                  key={index}
+                                  className="w-10 h-10 rounded-full flex items-center justify-center"
+                                  style={{
+                                    backgroundColor: link.backgroundColor || '#f3f4f6',
+                                    color: link.textColor || '#000000'
+                                  }}
+                                >
+                                  <span className="text-xs">🔗</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </CardContent>

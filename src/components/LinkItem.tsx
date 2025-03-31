@@ -60,12 +60,12 @@ const getSocialIcon = (iconName: string | undefined) => {
 const LinkItem = ({ link, className = '', icon }: LinkItemProps) => {
   const socialIcon = getSocialIcon(link.icon);
   
-  // Use custom styles if available, otherwise use default className
-  const customStyle = link.displayType === 'button' ? {
+  // Use custom styles if available
+  const customStyle = {
     backgroundColor: link.backgroundColor || undefined,
     color: link.textColor || undefined,
     borderRadius: link.borderRadius || undefined,
-  } : {};
+  };
   
   if (link.displayType === 'icon' && socialIcon) {
     return (

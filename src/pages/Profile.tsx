@@ -100,7 +100,7 @@ const Profile = () => {
     color: profile.fontColor || undefined,
   };
 
-  // Filter social links if showSocialIcons is true
+  // Split links into social icons and regular links
   const socialLinks = profile.showSocialIcons 
     ? profile.links.filter(link => link.icon && link.displayType === 'icon')
     : [];
@@ -175,7 +175,7 @@ const Profile = () => {
             />
           ))}
           
-          {profile.links.length === 0 && (
+          {regularLinks.length === 0 && (
             <div className={`text-center py-8 ${profile.fontColor ? '' : `${theme.textColor} opacity-80`}`}>
               <p style={textStyle}>No links available</p>
             </div>
