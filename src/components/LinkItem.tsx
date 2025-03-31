@@ -16,6 +16,7 @@ import {
   Figma,
   Slack,
 } from 'lucide-react';
+import { AspectRatio } from '@/components/ui/aspect-ratio';
 
 interface LinkItemProps {
   link: LinkType;
@@ -57,6 +58,42 @@ const getSocialIcon = (iconName: string | undefined) => {
   }
 };
 
+// Function to extract video IDs from different platforms
+const getVideoEmbedUrl = (url: string) => {
+  // YouTube
+  const youtubeRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
+  const youtubeMatch = url.match(youtubeRegex);
+  if (youtubeMatch && youtubeMatch[1]) {
+    return `https://www.youtube.com/embed/${youtubeMatch[1]}`;
+  }
+  
+  // Vimeo
+  const vimeoRegex = /(?:vimeo\.com\/(?:channels\/(?:\w+\/)?|groups\/(?:[^\/]*)\/videos\/|album\/(?:\d+)\/video\/|)(\d+)(?:$|\/|\?))/i;
+  const vimeoMatch = url.match(vimeoRegex);
+  if (vimeoMatch && vimeoMatch[1]) {
+    return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+  }
+  
+  // TikTok - Note: direct embedding is tricky, returning a link to the original
+  const tiktokRegex = /tiktok\.com\/@[\w.-]+\/video\/(\d+)/i;
+  const tiktokMatch = url.match(tiktokRegex);
+  if (tiktokMatch) {
+    return `https://www.tiktok.com/embed/v2/${tiktokMatch[1]}`;
+  }
+  
+  // Instagram - Note: direct embedding no longer supported easily
+  if (url.includes('instagram.com/p/') || url.includes('instagram.com/reel/')) {
+    // Extract the shortcode
+    const instaMatch = url.match(/instagram\.com\/(?:p|reel)\/([a-zA-Z0-9_-]+)/i);
+    if (instaMatch && instaMatch[1]) {
+      return `https://www.instagram.com/p/${instaMatch[1]}/embed`;
+    }
+  }
+  
+  // Default fallback - just return the original URL
+  return url;
+};
+
 const LinkItem = ({ link, className = '', icon }: LinkItemProps) => {
   const socialIcon = getSocialIcon(link.icon);
   
@@ -66,6 +103,27 @@ const LinkItem = ({ link, className = '', icon }: LinkItemProps) => {
     color: link.textColor || undefined,
     borderRadius: link.borderRadius || undefined,
   };
+  
+  // If it's a video type, render the embedded video
+  if (link.displayType === 'video') {
+    const embedUrl = getVideoEmbedUrl(link.url);
+    return (
+      <div className="w-full overflow-hidden rounded-lg">
+        <AspectRatio ratio={16 / 9}>
+          <iframe
+            src={embedUrl}
+            title={link.title}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            className="h-full w-full border-0"
+          />
+        </AspectRatio>
+        <div className="mt-2 text-center text-sm">
+          {link.title}
+        </div>
+      </div>
+    );
+  }
   
   if (link.displayType === 'icon' && socialIcon) {
     return (

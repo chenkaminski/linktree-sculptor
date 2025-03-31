@@ -77,14 +77,16 @@ const Profile = () => {
     color: profile.fontColor || undefined,
   };
 
-  // Split links into social icons and regular links
+  // Split links into social icons, videos, and regular links
   const socialLinks = profile.showSocialIcons 
     ? profile.links.filter(link => link.displayType === 'icon')
     : [];
     
+  const videoLinks = profile.links.filter(link => link.displayType === 'video');
+    
   const regularLinks = profile.showSocialIcons 
-    ? profile.links.filter(link => link.displayType !== 'icon')
-    : profile.links;
+    ? profile.links.filter(link => link.displayType !== 'icon' && link.displayType !== 'video')
+    : profile.links.filter(link => link.displayType !== 'video');
 
   return (
     <div 
@@ -143,6 +145,7 @@ const Profile = () => {
         )}
         
         <div className="w-full space-y-3 mb-8">
+          {/* Regular links */}
           {regularLinks.map((link) => (
             <LinkItem
               key={link.id}
@@ -151,7 +154,20 @@ const Profile = () => {
             />
           ))}
           
-          {regularLinks.length === 0 && (
+          {/* Video embeds */}
+          {videoLinks.length > 0 && (
+            <div className="space-y-6 my-6">
+              {videoLinks.map((link) => (
+                <LinkItem
+                  key={link.id}
+                  link={link}
+                  className=""
+                />
+              ))}
+            </div>
+          )}
+          
+          {regularLinks.length === 0 && videoLinks.length === 0 && (
             <div className={`text-center py-8 ${profile.fontColor ? '' : `${theme.textColor} opacity-80`}`}>
               <p style={textStyle}>No links available</p>
             </div>

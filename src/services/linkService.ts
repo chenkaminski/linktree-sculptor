@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { Database } from '@/integrations/supabase/schema';
@@ -12,7 +11,7 @@ export interface Link {
   backgroundColor?: string;
   textColor?: string;
   borderRadius?: string;
-  displayType?: 'button' | 'icon';
+  displayType?: 'button' | 'icon' | 'video';
 }
 
 export interface UserProfile {
@@ -204,7 +203,7 @@ export const addLink = async (userId: string, linkData: Omit<Link, 'id' | 'posit
       backgroundColor: data.background_color,
       textColor: data.text_color,
       borderRadius: data.border_radius,
-      displayType: data.display_type as 'button' | 'icon',
+      displayType: data.display_type as 'button' | 'icon' | 'video',
     };
   } catch (error) {
     console.error('Error in addLink:', error);
@@ -253,7 +252,7 @@ export const updateLink = async (userId: string, linkId: string, linkData: Parti
       backgroundColor: data.background_color,
       textColor: data.text_color,
       borderRadius: data.border_radius,
-      displayType: data.display_type as 'button' | 'icon',
+      displayType: data.display_type as 'button' | 'icon' | 'video',
     };
   } catch (error) {
     console.error('Error in updateLink:', error);
@@ -369,7 +368,7 @@ export const reorderLinks = async (userId: string, links: Link[]): Promise<Link[
       backgroundColor: link.background_color,
       textColor: link.text_color,
       borderRadius: link.border_radius,
-      displayType: link.display_type as 'button' | 'icon',
+      displayType: link.display_type as 'button' | 'icon' | 'video',
     }));
   } catch (error) {
     console.error('Error in reorderLinks:', error);

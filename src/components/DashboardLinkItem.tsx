@@ -3,13 +3,13 @@ import { useState } from 'react';
 import { Link } from '@/services/linkService';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Edit2, Trash2, GripVertical, Palette } from 'lucide-react';
+import { Edit2, Trash2, GripVertical, Palette, Video } from 'lucide-react';
 import LinkForm from './LinkForm';
 import LinkStylesEditor from './LinkStylesEditor';
 
 interface DashboardLinkItemProps {
   link: Link;
-  onEdit: (id: string, data: { title: string; url: string }) => void;
+  onEdit: (id: string, data: { title: string; url: string; displayType?: 'button' | 'icon' | 'video' }) => void;
   onDelete: (id: string) => void;
   onStyleUpdate: (id: string, styles: Partial<Link>) => void;
   isDragging?: boolean;
@@ -27,7 +27,7 @@ const DashboardLinkItem = ({
   const [isEditing, setIsEditing] = useState(false);
   const [isStyleEditing, setIsStyleEditing] = useState(false);
 
-  const handleEdit = (data: { title: string; url: string }) => {
+  const handleEdit = (data: { title: string; url: string; displayType?: 'button' | 'icon' | 'video' }) => {
     onEdit(link.id, data);
     setIsEditing(false);
   };
@@ -49,7 +49,11 @@ const DashboardLinkItem = ({
       <LinkForm
         onSubmit={handleEdit}
         onCancel={() => setIsEditing(false)}
-        defaultValues={{ title: link.title, url: link.url }}
+        defaultValues={{ 
+          title: link.title, 
+          url: link.url,
+          displayType: link.displayType as 'button' | 'icon' | 'video'
+        }}
         isEdit
       />
     );
@@ -79,13 +83,17 @@ const DashboardLinkItem = ({
             >
               {link.displayType === 'icon' && link.icon ? (
                 <span className="text-xs">🔗</span>
+              ) : link.displayType === 'video' ? (
+                <Video size={16} />
               ) : (
                 <span className="text-xs">Aa</span>
               )}
             </div>
             <div>
               <h3 className="font-medium">{link.title}</h3>
-              <p className="text-sm text-gray-500 truncate">{link.url}</p>
+              <p className="text-sm text-gray-500 truncate">
+                {link.displayType === 'video' ? '📹 ' : ''}{link.url}
+              </p>
             </div>
           </div>
         </div>
