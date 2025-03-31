@@ -25,7 +25,7 @@ const LinkStylesEditor = ({ link, onSubmit, onCancel }: LinkStylesEditorProps) =
   const [backgroundColor, setBackgroundColor] = useState(link.backgroundColor || '#f3f4f6');
   const [textColor, setTextColor] = useState(link.textColor || '#000000');
   const [borderRadius, setBorderRadius] = useState(link.borderRadius || '0.5rem');
-  const [displayType, setDisplayType] = useState(link.displayType || 'button');
+  const [displayType, setDisplayType] = useState<'button' | 'icon'>(link.displayType || 'button');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,6 +57,13 @@ const LinkStylesEditor = ({ link, onSubmit, onCancel }: LinkStylesEditorProps) =
     { value: '9999px', label: 'Full' },
   ];
 
+  // This handler ensures type safety when changing display type
+  const handleDisplayTypeChange = (value: string) => {
+    if (value === 'button' || value === 'icon') {
+      setDisplayType(value);
+    }
+  };
+
   return (
     <Card className="border shadow-sm w-full mb-3">
       <CardHeader className="pb-3">
@@ -78,7 +85,7 @@ const LinkStylesEditor = ({ link, onSubmit, onCancel }: LinkStylesEditorProps) =
             <Label className="mb-2 block">Display Type</Label>
             <RadioGroup 
               value={displayType} 
-              onValueChange={setDisplayType}
+              onValueChange={handleDisplayTypeChange}
               className="flex space-x-4"
             >
               <div className="flex items-center space-x-2">
