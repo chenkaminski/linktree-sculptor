@@ -94,39 +94,66 @@ const getVideoEmbedUrl = (url: string) => {
   return url;
 };
 
-const LinkItem = ({ link, className = '' }: LinkItemProps) => {
-  const icon = getSocialIcon(link.icon);
-
+const LinkItem = ({ link, className = '', icon }: LinkItemProps) => {
+  const socialIcon = getSocialIcon(link.icon);
+  
+  // Use custom styles if available
+  const customStyle = {
+    backgroundColor: link.backgroundColor || undefined,
+    color: link.textColor || undefined,
+    borderRadius: link.borderRadius || undefined,
+  };
+  
+  // If it's a video type, render the embedded video
   if (link.display_type === 'video') {
+    const embedUrl = getVideoEmbedUrl(link.url);
+    console.log("embedUrl",embedUrl)
     return (
-      <div className="w-full aspect-video rounded-lg overflow-hidden">
+      <div className="w-full overflow-hidden rounded-lg">
+           <div className="mt-2 text-center text-sm">
+          {link.title}
+        </div>
         <AspectRatio ratio={16 / 9}>
           <iframe
-            src={link.url}
-            className="w-full h-full"
+            src={embedUrl}
+            title={link.title}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
+            className="h-full w-full border-0"
           />
         </AspectRatio>
+     
       </div>
     );
   }
-
+  
+  if (link.display_type === 'icon' && socialIcon) {
+    return (
+      <a 
+        href={link.url} 
+        target="_blank" 
+        rel="noopener noreferrer"
+        className="social-icon-link"
+        title={link.title}
+        style={customStyle}
+      >
+        {socialIcon}
+      </a>
+    );
+  }
+  
   return (
-    <a
-      href={link.url}
-      target="_blank"
+    <a 
+      href={link.url} 
+      target="_blank" 
       rel="noopener noreferrer"
-      className={`w-full py-3 px-5 rounded-lg flex items-center justify-center gap-2 font-medium transition-transform hover:scale-[1.02] ${className}`}
-      style={{
-        backgroundColor: link.backgroundColor || '#f3f4f6',
-        color: link.textColor || '#000000',
-        borderRadius: link.borderRadius || '0.5rem',
-      }}
+      className={`link-card ${className}`}
+      style={customStyle}
     >
-      {icon && <span className="flex-shrink-0">{icon}</span>}
-      <span className="flex-grow">{link.title}</span>
-      <ExternalLink size={16} className="flex-shrink-0" />
+      {icon && <span className="mr-2">{icon}</span>}
+      {socialIcon && <span className="mr-2">{socialIcon}</span>}
+      {link.title}
+      <ExternalLink size={16} className="ml-1" />
     </a>
   );
 };

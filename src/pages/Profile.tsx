@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { UserProfile, getProfileByUsername } from '@/services/linkService';
 import { getTheme } from '@/services/themeService';
 import LinkItem from '@/components/LinkItem';
+import { InfiniteSlider } from '@/components/ui/infinite-slider';
 import { 
   Facebook, 
   Twitter, 
@@ -140,6 +141,7 @@ const Profile = () => {
           </div>
         )}
         
+        {/* Regular links and videos should come before images */}
         <div className="w-full space-y-3 mb-8">
           {/* Regular links */}
           {regularLinks.map((link) => (
@@ -169,6 +171,63 @@ const Profile = () => {
             </div>
           )}
         </div>
+        
+        {/* Image slider - moved after links */}
+        {profile.images && profile.images.length > 0 && (
+          <div className="w-full mb-6 overflow-hidden rounded-lg">
+            {profile.useInfiniteSlider ? (
+              <InfiniteSlider duration={30} gap={8} className="w-full">
+                {profile.images.map((image) => (
+                  <div key={image.id} className="flex-shrink-0 w-64 h-40 rounded-lg overflow-hidden">
+                    <img 
+                      src={image.url}
+                      alt={image.alt}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ))}
+              </InfiniteSlider>
+            ) : profile.imageLayout === 'row' ? (
+              <div className="overflow-x-auto py-2">
+                <div className="flex gap-4 pb-4">
+                  {profile.images.map((image) => (
+                    <div key={image.id} className="flex-shrink-0 w-64 h-40 rounded-lg overflow-hidden">
+                      <img 
+                        src={image.url}
+                        alt={image.alt}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : profile.imageLayout === 'column' ? (
+              <div className="flex flex-col gap-4">
+                {profile.images.map((image) => (
+                  <div key={image.id} className="w-full h-40 rounded-lg overflow-hidden">
+                    <img 
+                      src={image.url}
+                      alt={image.alt}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className={`grid grid-cols-1 sm:grid-cols-${profile.gridColumns || 2} gap-4`}>
+                {profile.images.map((image) => (
+                  <div key={image.id} className="aspect-video rounded-lg overflow-hidden">
+                    <img 
+                      src={image.url}
+                      alt={image.alt}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
         
         <div className="mt-auto pt-8 text-center">
           <a 

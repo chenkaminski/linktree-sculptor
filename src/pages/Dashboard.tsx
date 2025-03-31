@@ -6,13 +6,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LogOut, LinkIcon, User, Settings, Share2, Palette } from 'lucide-react';
+import { LogOut, LinkIcon, User, Settings, Share2, Palette, Image as ImageIcon } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import LinkForm from '@/components/LinkForm';
 import DashboardLinkItem from '@/components/DashboardLinkItem';
 import ProfileStylesEditor from '@/components/ProfileStylesEditor';
-import { UserProfile, Link as LinkType, getOrCreateProfile, updateProfile, addLink, updateLink, deleteLink, reorderLinks } from '@/services/linkService';
+import { UserProfile, Link as LinkType, getOrCreateProfile, updateProfile, addLink, updateLink, deleteLink, reorderLinks, addImage, deleteImage, toggleInfiniteSlider, SliderImage, updateImageLayout } from '@/services/linkService';
 import { themes } from '@/services/themeService';
 import SocialIconPicker from '@/components/SocialIconPicker';
 import ImageUploader from '@/components/ImageUploader';
@@ -21,6 +21,8 @@ import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrate
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { CSS } from '@dnd-kit/utilities';
 import { Switch } from '@/components/ui/switch';
+import ImageSlider from '@/components/ImageSlider';
+import { InfiniteSlider } from '@/components/ui/infinite-slider';
 
 const SortableLinkItem = ({ link, onEdit, onDelete, onStyleUpdate }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: link.id });
@@ -119,7 +121,7 @@ const Dashboard = () => {
     }
   };
   
-  const handleAddSocialLink = async (data: { title: string; url: string; icon: string; displayType: 'button' | 'icon' }) => {
+  const handleAddSocialLink = async (data: { title: string; url: string; icon: string; display_type: 'button' | 'icon' }) => {
     if (!user) return;
     
     try {
@@ -214,15 +216,38 @@ const Dashboard = () => {
   };
   
   const handleAvatarChange = async (url: string) => {
-    if (!user || !profile) return;
+    if (!user) return;
+    
+    setProfileForm((prev) => ({
+      ...prev,
+      avatar: url
+    }));
     
     try {
-      const updatedProfile = await updateProfile(user.id, {
-        avatar: url,
+      await updateProfile(user.id, { avatar: url });
+      
+      setProfile((prev) => {
+        if (!prev) return prev;
+        
+        return {
+          ...prev,
+          avatar: url
+        };
       });
-      setProfile(updatedProfile);
+      
+      if (url) {
+        toast({
+          title: 'Avatar updated',
+          description: 'Your profile picture has been updated successfully.',
+        });
+      }
     } catch (error) {
       console.error('Error updating avatar:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update avatar',
+        variant: 'destructive'
+      });
     }
   };
   
@@ -325,7 +350,7 @@ const Dashboard = () => {
     if (!profile) return null;
     
     const socialLinks = profile.links.filter(link => link.icon && 
-      (link.displayType === 'icon' || link.icon));
+      (link.display_type === 'icon' || link.icon));
       
     if (socialLinks.length === 0) return null;
     
@@ -345,6 +370,99 @@ const Dashboard = () => {
         ))}
       </div>
     );
+  };
+
+  const handleAddImage = async (image: { url: string; alt: string }) => {
+    if (!user) return;
+    
+    try {
+      const newImage = await addImage(user.id, image);
+      
+      setProfile(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          images: [...(prev.images || []), newImage]
+        };
+      });
+    } catch (error) {
+      console.error('Error adding image:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to add image to slider',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const handleDeleteImage = async (imageId: string) => {
+    if (!user) return;
+    
+    try {
+      await deleteImage(user.id, imageId);
+      
+      setProfile(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          images: prev.images?.filter(img => img.id !== imageId) || []
+        };
+      });
+    } catch (error) {
+      console.error('Error deleting image:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete image from slider',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const handleToggleInfiniteSlider = async (value: boolean) => {
+    if (!user) return;
+    
+    try {
+      await toggleInfiniteSlider(user.id, value);
+      
+      setProfile(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          useInfiniteSlider: value
+        };
+      });
+    } catch (error) {
+      console.error('Error toggling infinite slider:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update slider mode',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const handleUpdateImageLayout = async (layout: 'row' | 'column' | 'grid', columns?: 2 | 3 | 4) => {
+    if (!user) return;
+    
+    try {
+      await updateImageLayout(user.id, layout, columns);
+      
+      setProfile(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          imageLayout: layout,
+          gridColumns: columns || 2
+        };
+      });
+    } catch (error) {
+      console.error('Error updating image layout:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update image layout',
+        variant: 'destructive'
+      });
+    }
   };
 
   if (loading) {
@@ -396,6 +514,10 @@ const Dashboard = () => {
             <TabsTrigger value="social">
               <Share2 size={16} className="mr-2" />
               Social Icons
+            </TabsTrigger>
+            <TabsTrigger value="images">
+              <ImageIcon size={16} className="mr-2" />
+              Images
             </TabsTrigger>
             <TabsTrigger value="appearance">
               <Palette size={16} className="mr-2" />
@@ -536,7 +658,7 @@ const Dashboard = () => {
                           {profile?.showSocialIcons && renderSocialIcons()}
                           
                           <div className="w-full max-w-sm space-y-3">
-                            {profile?.links.filter(l => !profile.showSocialIcons || l.displayType !== 'icon').map((link) => (
+                            {profile?.links.filter(l => !profile.showSocialIcons || l.display_type !== 'icon').map((link) => (
                               <div 
                                 key={link.id}
                                 className={`w-full py-3 px-5 rounded-lg flex items-center justify-center gap-2 font-medium ${profile?.backgroundImage ? 'bg-white/20 backdrop-blur-sm text-white' : themes.find(t => t.id === profile?.theme)?.buttonStyle || 'bg-white text-gray-800'}`}
@@ -700,6 +822,127 @@ const Dashboard = () => {
             </div>
           </TabsContent>
           
+          <TabsContent value="images" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="md:col-span-2 space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Image Slider</CardTitle>
+                    <CardDescription>
+                      Add images to create a visual gallery on your profile
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ImageSlider 
+                      images={profile?.images || []}
+                      onAddImage={handleAddImage}
+                      onDeleteImage={handleDeleteImage}
+                      onToggleInfiniteSlider={handleToggleInfiniteSlider}
+                      onUpdateImageLayout={handleUpdateImageLayout}
+                      useInfiniteSlider={profile?.useInfiniteSlider || false}
+                      imageLayout={profile?.imageLayout as 'row' | 'column' | 'grid' || 'row'}
+                      gridColumns={profile?.gridColumns as 2 | 3 | 4 || 2}
+                      userId={user?.id || ''}
+                    />
+                  </CardContent>
+                </Card>
+              </div>
+              
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Preview</CardTitle>
+                    <CardDescription>
+                      See how your page will look
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="border rounded-lg overflow-hidden">
+                      <div className={`pt-6 px-4 ${profile?.backgroundImage ? 'bg-gradient-to-b from-purple-600 to-blue-600' : themes.find(t => t.id === profile?.theme)?.background || 'bg-gray-100'}`}>
+                        <div className="mx-auto max-w-sm flex flex-col items-center">
+                          {profile?.avatar && (
+                            <div className="w-20 h-20 rounded-full overflow-hidden mb-4 border-2 border-white">
+                              <img
+                                src={profile.avatar}
+                                alt={profile.displayName}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          )}
+                          
+                          <h3 className={`text-xl font-bold ${profile?.backgroundImage ? 'text-white' : themes.find(t => t.id === profile?.theme)?.textColor || 'text-gray-900'}`}>
+                            {profile?.displayName || 'Your Name'}
+                          </h3>
+                          
+                          <p className={`text-center text-sm mb-4 ${profile?.backgroundImage ? 'text-white/80' : (themes.find(t => t.id === profile?.theme)?.textColor || 'text-gray-900') + ' opacity-80'}`}>
+                            {profile?.bio || 'Your bio goes here...'}
+                          </p>
+                          
+                          {/* Images preview */}
+                          {profile?.images && profile.images.length > 0 && (
+                            <div className="w-full mb-4 overflow-hidden rounded-lg">
+                              {profile.useInfiniteSlider ? (
+                                <InfiniteSlider duration={30} gap={8} className="w-full">
+                                  {profile.images.map((image) => (
+                                    <div key={image.id} className="flex-shrink-0 w-32 h-24 rounded-lg overflow-hidden">
+                                      <img 
+                                        src={image.url}
+                                        alt={image.alt}
+                                        className="w-full h-full object-cover"
+                                      />
+                                    </div>
+                                  ))}
+                                </InfiniteSlider>
+                              ) : profile.imageLayout === 'row' ? (
+                                <div className="overflow-x-auto py-2">
+                                  <div className="flex gap-2">
+                                    {profile.images.map((image) => (
+                                      <div key={image.id} className="flex-shrink-0 w-32 h-24 rounded-lg overflow-hidden">
+                                        <img 
+                                          src={image.url}
+                                          alt={image.alt}
+                                          className="w-full h-full object-cover"
+                                        />
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              ) : profile.imageLayout === 'column' ? (
+                                <div className="flex flex-col gap-2 max-h-[200px] overflow-y-auto">
+                                  {profile.images.map((image) => (
+                                    <div key={image.id} className="w-full h-24 rounded-lg overflow-hidden">
+                                      <img 
+                                        src={image.url}
+                                        alt={image.alt}
+                                        className="w-full h-full object-cover"
+                                      />
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <div className={`grid grid-cols-${profile.gridColumns || 2} gap-2`}>
+                                  {profile.images.map((image) => (
+                                    <div key={image.id} className="aspect-video rounded-lg overflow-hidden">
+                                      <img 
+                                        src={image.url}
+                                        alt={image.alt}
+                                        className="w-full h-full object-cover"
+                                      />
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </TabsContent>
+          
           <TabsContent value="appearance">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <div className="md:col-span-2">
@@ -823,7 +1066,7 @@ const Dashboard = () => {
                           {profile?.showSocialIcons && renderSocialIcons()}
                           
                           <div className="w-full max-w-sm space-y-3">
-                            {profile?.links.filter(l => !profile.showSocialIcons || l.displayType !== 'icon').map((link) => (
+                            {profile?.links.filter(l => !profile.showSocialIcons || l.display_type !== 'icon').map((link) => (
                               <div 
                                 key={link.id}
                                 className={`w-full py-3 px-5 rounded-lg flex items-center justify-center gap-2 font-medium ${profile?.backgroundImage ? 'bg-white/20 backdrop-blur-sm text-white' : themes.find(t => t.id === profile?.theme)?.buttonStyle || 'bg-white text-gray-800'}`}

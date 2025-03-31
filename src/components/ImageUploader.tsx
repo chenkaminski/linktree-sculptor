@@ -1,10 +1,10 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Upload, X } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import AvatarCropper from './AvatarCropper';
 
 interface ImageUploaderProps {
   type: 'avatar' | 'background';
@@ -15,16 +15,31 @@ interface ImageUploaderProps {
 
 const ImageUploader = ({ type, currentImage, userId, onImageUploaded }: ImageUploaderProps) => {
   const [uploading, setUploading] = useState(false);
+  const [cropperOpen, setCropperOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
   
-  const uploadImage = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!event.target.files || event.target.files.length === 0) {
+      return;
+    }
+    
+    const file = event.target.files[0];
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (type === 'avatar') {
+        setSelectedImage(reader.result as string);
+        setCropperOpen(true);
+      } else {
+        uploadFile(file);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+  
+  const uploadFile = async (file: File) => {
     try {
       setUploading(true);
       
-      if (!event.target.files || event.target.files.length === 0) {
-        throw new Error('You must select an image to upload.');
-      }
-      
-      const file = event.target.files[0];
       const fileExt = file.name.split('.').pop();
       const filePath = `${userId}/${type}-${Math.random()}.${fileExt}`;
       
@@ -56,6 +71,13 @@ const ImageUploader = ({ type, currentImage, userId, onImageUploaded }: ImageUpl
     }
   };
   
+  const handleCropComplete = async (croppedBlob: Blob) => {
+    const file = new File([croppedBlob], `cropped-avatar.jpg`, { type: 'image/jpeg' });
+    await uploadFile(file);
+    setCropperOpen(false);
+    setSelectedImage(null);
+  };
+  
   const removeImage = () => {
     onImageUploaded('');
     toast({
@@ -66,6 +88,18 @@ const ImageUploader = ({ type, currentImage, userId, onImageUploaded }: ImageUpl
   
   return (
     <div className="space-y-4">
+      {selectedImage && (
+        <AvatarCropper
+          image={selectedImage}
+          onCropComplete={handleCropComplete}
+          onCancel={() => {
+            setCropperOpen(false);
+            setSelectedImage(null);
+          }}
+          open={cropperOpen}
+        />
+      )}
+      
       {type === 'avatar' ? (
         <div className="flex flex-col items-center gap-4">
           <Avatar className="w-24 h-24">
@@ -90,7 +124,7 @@ const ImageUploader = ({ type, currentImage, userId, onImageUploaded }: ImageUpl
                   type="file"
                   className="hidden"
                   accept="image/*"
-                  onChange={uploadImage}
+                  onChange={handleImageSelect}
                   disabled={uploading}
                 />
               </label>
@@ -142,7 +176,7 @@ const ImageUploader = ({ type, currentImage, userId, onImageUploaded }: ImageUpl
                 type="file"
                 className="hidden"
                 accept="image/*"
-                onChange={uploadImage}
+                onChange={handleImageSelect}
                 disabled={uploading}
               />
             </label>

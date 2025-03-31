@@ -86,6 +86,9 @@ export type Database = {
           theme: string | null
           updated_at: string
           username: string
+          use_infinite_slider: boolean | null
+          image_layout: string | null
+          grid_columns: number | null
         }
         Insert: {
           avatar?: string | null
@@ -100,6 +103,9 @@ export type Database = {
           theme?: string | null
           updated_at?: string
           username: string
+          use_infinite_slider?: boolean | null
+          image_layout?: string | null
+          grid_columns?: number | null
         }
         Update: {
           avatar?: string | null
@@ -114,6 +120,39 @@ export type Database = {
           theme?: string | null
           updated_at?: string
           username?: string
+          use_infinite_slider?: boolean | null
+          image_layout?: string | null
+          grid_columns?: number | null
+        }
+        Relationships: []
+      }
+      images: {
+        Row: {
+          id: string
+          user_id: string
+          url: string
+          alt: string
+          position: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          url: string
+          alt: string
+          position: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          url?: string
+          alt?: string
+          position?: number
+          created_at?: string
+          updated_at?: string
         }
         Relationships: []
       }
