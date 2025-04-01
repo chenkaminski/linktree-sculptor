@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export interface Link {
@@ -373,6 +372,33 @@ export const updateImagePositions = async (images: { id: string; position: numbe
     }
   } catch (error) {
     console.error('Error updating image positions:', error);
+    throw error;
+  }
+};
+
+// Function to update image layout
+export const updateImageLayout = async (userId: string, layout: 'row' | 'column' | 'grid', columns?: 2 | 3 | 4): Promise<void> => {
+  try {
+    if (!userId) {
+      throw new Error('User ID is required');
+    }
+    
+    const updateData: { image_layout: string; grid_columns?: number } = {
+      image_layout: layout,
+    };
+    
+    if (layout === 'grid' && columns) {
+      updateData.grid_columns = columns;
+    }
+    
+    const { error } = await supabase
+      .from('profiles')
+      .update(updateData)
+      .eq('id', userId);
+      
+    if (error) throw error;
+  } catch (error) {
+    console.error('Error updating image layout:', error);
     throw error;
   }
 };
