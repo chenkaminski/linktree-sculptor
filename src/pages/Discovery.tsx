@@ -13,13 +13,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Search } from 'lucide-react';
+import Navigation from '@/components/Navigation';
 
 interface ProfilePreview {
   id: string;
   username: string;
   display_name: string;
   bio: string | null;
-  avatar_url: string | null;
+  avatar: string | null;
   category: string | null;
 }
 
@@ -48,7 +49,7 @@ const Discovery = () => {
       try {
         let query = supabase
           .from('profiles')
-          .select('id, username, display_name, bio, avatar_url, category')
+          .select('id, username, display_name, bio, avatar, category')
           .eq('is_public', true);
         
         if (selectedCategory !== 'All') {
@@ -79,7 +80,7 @@ const Discovery = () => {
         
         if (error) throw error;
         
-        setProfiles(data || []);
+        setProfiles(data as ProfilePreview[] || []);
       } catch (error) {
         console.error('Error fetching profiles:', error);
       } finally {
@@ -92,6 +93,8 @@ const Discovery = () => {
 
   return (
     <div className="container mx-auto px-4 py-12 max-w-6xl">
+      <Navigation />
+      
       <h1 className="text-3xl font-bold mb-8 bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-indigo-600">
         Discover Profiles
       </h1>
@@ -185,8 +188,8 @@ const renderProfileGrid = (profiles: ProfilePreview[], loading: boolean) => {
     >
       <div className="flex items-center space-x-4">
         <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-100">
-          {profile.avatar_url ? (
-            <img src={profile.avatar_url} alt={profile.display_name} className="w-full h-full object-cover" />
+          {profile.avatar ? (
+            <img src={profile.avatar} alt={profile.display_name} className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-purple-400 to-indigo-600 flex items-center justify-center text-white font-bold">
               {profile.display_name.charAt(0).toUpperCase()}

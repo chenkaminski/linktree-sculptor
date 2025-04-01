@@ -1,654 +1,378 @@
+
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
-import { Database } from '@/integrations/supabase/schema';
 
 export interface Link {
   id: string;
+  user_id: string;
+  position: number;
   title: string;
   url: string;
+  display_type: string;
+  background_color: string;
+  text_color: string;
+  border_radius: string;
   icon?: string;
-  position: number;
-  backgroundColor?: string;
-  textColor?: string;
-  borderRadius?: string;
   shadow?: string;
-  shadowColor?: string;
-  display_type?: 'button' | 'icon' | 'video' | string;
+  shadow_color?: string;
+  created_at: string;
+  updated_at: string;
 }
 
-export interface SliderImage {
+export interface Image {
   id: string;
   url: string;
   alt: string;
+  position: number;
 }
 
 export interface UserProfile {
+  id: string;
   username: string;
   displayName: string;
   bio: string;
   avatar: string;
-  backgroundImage: string;
-  links: Link[];
   theme: string;
-  fontFamily?: string;
-  fontColor?: string;
-  showSocialIcons?: boolean;
-  images?: SliderImage[];
-  useInfiniteSlider?: boolean;
-  imageLayout?: 'row' | 'column' | 'grid';
-  gridColumns?: 2 | 3 | 4;
+  fontFamily: string;
+  fontColor: string;
+  backgroundImage: string;
+  showSocialIcons: boolean;
+  useInfiniteSlider: boolean;
+  imageLayout: string;
+  gridColumns: number;
   logo?: string;
+  links: Link[];
+  images?: Image[];
 }
 
-// Get or create a profile for the current user
-export const getOrCreateProfile = async (userId: string, defaultUsername?: string): Promise<UserProfile> => {
-  try {
-    const { data: profile, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
-
-    if (error) {
-      console.error('Error fetching profile:', error);
-      throw error;
-    }
-
-    const { data: links, error: linksError } = await supabase
-      .from('links')
-      .select('*')
-      .eq('user_id', userId)
-      .order('position');
-
-    if (linksError) {
-      console.error('Error fetching links:', linksError);
-      throw linksError;
-    }
-
-    const { data: images, error: imagesError } = await supabase
-      .from('images')
-      .select('*')
-      .eq('user_id', userId)
-      .order('position');
-console.log("images",images)
-console.log("imagesError",imagesError)
-    if (imagesError) {
-      console.error('Error fetching images:', imagesError);
-      // Don't throw, just log - we'll return an empty array
-    }
-
-    return {
-      username: profile.username,
-      displayName: profile.display_name || profile.username,
-      bio: profile.bio || 'Welcome to my links page!',
-      avatar: profile.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.username}`,
-      backgroundImage: profile.background_image || '',
-      links: links?.map(link => ({
-        id: link.id,
-        title: link.title,
-        url: link.url,
-        icon: link.icon,
-        position: link.position,
-        backgroundColor: link.background_color,
-        textColor: link.text_color,
-        borderRadius: link.border_radius,
-        shadow: link.shadow,
-        shadowColor: link.shadow_color,
-        display_type: link.display_type
-      })) || [],
-      theme: profile.theme || 'default',
-      fontFamily: profile.font_family || 'Inter',
-      fontColor: profile.font_color || '',
-      showSocialIcons: profile.show_social_icons || false,
-      images: images?.map(img => ({
-        id: img.id,
-        url: img.url,
-        alt: img.alt
-      })) || [],
-      useInfiniteSlider: profile.use_infinite_slider || false,
-      imageLayout: (profile.image_layout as 'row' | 'column' | 'grid') || 'row',
-      gridColumns: (profile.grid_columns as 2 | 3 | 4) || 2,
-      logo: profile.logo || '',
-    };
-  } catch (error) {
-    console.error('Error in getOrCreateProfile:', error);
-    throw error;
-  }
-};
-
-// Get profile by username
+// Function to get profile by username
 export const getProfileByUsername = async (username: string): Promise<UserProfile | null> => {
   try {
-    const { data: profile, error } = await supabase
+    // Get user profile
+    const { data: profileData, error: profileError } = await supabase
       .from('profiles')
       .select('*')
-      .eq('username', username.toLowerCase())
+      .eq('username', username)
       .single();
 
-    if (error) {
-      console.error('Error fetching profile by username:', error);
-      return null;
-    }
+    if (profileError) throw profileError;
+    if (!profileData) return null;
 
-    const { data: links, error: linksError } = await supabase
+    // Get user links
+    const { data: linksData, error: linksError } = await supabase
       .from('links')
       .select('*')
-      .eq('user_id', profile.id)
-      .order('position');
+      .eq('user_id', profileData.id)
+      .order('position', { ascending: true });
 
-    if (linksError) {
-      console.error('Error fetching links for profile:', linksError);
-      throw linksError;
-    }
+    if (linksError) throw linksError;
 
-    const { data: images, error: imagesError } = await supabase
+    // Get images if any
+    const { data: imagesData, error: imagesError } = await supabase
       .from('images')
       .select('*')
-      .eq('user_id', profile.id)
-      .order('position');
+      .eq('user_id', profileData.id)
+      .order('position', { ascending: true });
 
-    if (imagesError) {
-      console.error('Error fetching images for profile:', imagesError);
-      // Don't throw, just log - we'll return an empty array
-    }
+    // We don't throw on image error since it's not critical
+    const images = imagesError ? [] : imagesData || [];
 
+    // Map links to add any missing properties with defaults
+    const links = (linksData || []).map((link: any) => ({
+      ...link,
+      background_color: link.background_color || '#f3f4f6',
+      text_color: link.text_color || '#000000',
+      border_radius: link.border_radius || '0.5rem',
+      shadow: link.shadow || undefined,
+      shadow_color: link.shadow_color || undefined,
+    }));
+
+    // Transform to UserProfile format
     return {
-      username: profile.username,
-      displayName: profile.display_name || profile.username,
-      bio: profile.bio || '',
-      avatar: profile.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.username}`,
-      backgroundImage: profile.background_image || '',
-      links: links?.map(link => ({
-        id: link.id,
-        title: link.title,
-        url: link.url,
-        icon: link.icon,
-        position: link.position,
-        backgroundColor: link.background_color,
-        textColor: link.text_color,
-        borderRadius: link.border_radius,
-        shadow: link.shadow,
-        shadowColor: link.shadow_color,
-        display_type: link.display_type
-      })) || [],
-      theme: profile.theme || 'default',
-      fontFamily: profile.font_family || 'Inter',
-      fontColor: profile.font_color || '',
-      showSocialIcons: profile.show_social_icons || false,
-      images: images?.map(img => ({
-        id: img.id,
-        url: img.url,
-        alt: img.alt
-      })) || [],
-      useInfiniteSlider: profile.use_infinite_slider || false,
-      imageLayout: (profile.image_layout as 'row' | 'column' | 'grid') || 'row',
-      gridColumns: (profile.grid_columns as 2 | 3 | 4) || 2,
-      logo: profile.logo || '',
+      id: profileData.id,
+      username: profileData.username,
+      displayName: profileData.display_name || profileData.username,
+      bio: profileData.bio || '',
+      avatar: profileData.avatar || 'https://via.placeholder.com/150',
+      theme: profileData.theme || 'default',
+      fontFamily: profileData.font_family || 'Inter',
+      fontColor: profileData.font_color || '',
+      backgroundImage: profileData.background_image || '',
+      showSocialIcons: profileData.show_social_icons || false,
+      useInfiniteSlider: profileData.use_infinite_slider || false,
+      imageLayout: profileData.image_layout || 'row',
+      gridColumns: profileData.grid_columns || 2,
+      logo: profileData.logo || undefined,
+      links,
+      images,
     };
   } catch (error) {
-    console.error('Error in getProfileByUsername:', error);
-    return null;
+    console.error('Error fetching profile:', error);
+    throw error;
   }
 };
 
-// Update profile
-export const updateProfile = async (userId: string, data: Partial<UserProfile>): Promise<UserProfile> => {
+// Function to save profile
+export const saveProfile = async (profile: Partial<UserProfile>): Promise<void> => {
   try {
-    const updateData: Record<string, unknown> = {};
-    
-    if (data.username) updateData.username = data.username.toLowerCase();
-    if (data.displayName !== undefined) updateData.display_name = data.displayName;
-    if (data.bio !== undefined) updateData.bio = data.bio;
-    if (data.avatar !== undefined) updateData.avatar = data.avatar;
-    if (data.backgroundImage !== undefined) updateData.background_image = data.backgroundImage;
-    if (data.theme) updateData.theme = data.theme;
-    if (data.fontFamily) updateData.font_family = data.fontFamily;
-    if (data.fontColor !== undefined) updateData.font_color = data.fontColor;
-    if (data.showSocialIcons !== undefined) updateData.show_social_icons = data.showSocialIcons;
-    if (data.imageLayout !== undefined) updateData.image_layout = data.imageLayout;
-    if (data.gridColumns !== undefined) updateData.grid_columns = data.gridColumns;
-    if (data.logo !== undefined) updateData.logo = data.logo;
-    
+    if (!profile.id) {
+      throw new Error('Profile ID is required');
+    }
+
+    // Map profile to database format
+    const dbProfile = {
+      username: profile.username,
+      display_name: profile.displayName,
+      bio: profile.bio,
+      avatar: profile.avatar,
+      theme: profile.theme,
+      font_family: profile.fontFamily,
+      font_color: profile.fontColor,
+      background_image: profile.backgroundImage,
+      show_social_icons: profile.showSocialIcons,
+      use_infinite_slider: profile.useInfiniteSlider,
+      image_layout: profile.imageLayout,
+      grid_columns: profile.gridColumns,
+      logo: profile.logo,
+    };
+
+    // Save profile
     const { error } = await supabase
       .from('profiles')
-      .update(updateData)
-      .eq('id', userId);
+      .update(dbProfile)
+      .eq('id', profile.id);
 
-    if (error) {
-      console.error('Error updating profile:', error);
-      throw error;
-    }
-  
-  toast({
-    title: 'Profile updated',
-    description: 'Your profile has been updated successfully',
-  });
-  
-    return await getOrCreateProfile(userId);
-  } catch (error) {
-    console.error('Error in updateProfile:', error);
-    throw error;
-  }
-};
+    if (error) throw error;
 
-// Add link
-export const addLink = async (userId: string, linkData: Omit<Link, 'id' | 'position'>): Promise<Link> => {
-  try {
-    // Get the count of existing links to determine the position
-    const { count, error: countError } = await supabase
-      .from('links')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', userId);
-
-    if (countError) {
-      console.error('Error counting links:', countError);
-      throw countError;
-    }
-
-    const position = count || 0;
-    console.log("linkData.display_type",linkData)
-    const { data, error } = await supabase
-      .from('links')
-      .insert([
-        {
-          user_id: userId,
-          title: linkData.title,
-          url: linkData.url,
-          icon: linkData.icon,
-          position: position,
-          background_color: linkData.backgroundColor,
-          text_color: linkData.textColor,
-          border_radius: linkData.borderRadius,
-          display_type: linkData.display_type
-        }
-      ])
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error adding link:', error);
-      throw error;
-    }
-  
-  toast({
-    title: 'Link added',
-    description: 'Your link has been added successfully',
-  });
-  
-    return {
-      id: data.id,
-      title: data.title,
-      url: data.url,
-      icon: data.icon,
-      position: data.position,
-      backgroundColor: data.background_color,
-      textColor: data.text_color,
-      borderRadius: data.border_radius,
-      display_type: data.display_type as 'button' | 'icon' | 'video',
-    };
-  } catch (error) {
-    console.error('Error in addLink:', error);
-    throw error;
-  }
-};
-
-// Update link
-export const updateLink = async (userId: string, linkId: string, linkData: Partial<Link>): Promise<Link> => {
-  try {
-    const updateData: Record<string, unknown> = {};
-    
-    if (linkData.title !== undefined) updateData.title = linkData.title;
-    if (linkData.url !== undefined) updateData.url = linkData.url;
-    if (linkData.icon !== undefined) updateData.icon = linkData.icon;
-    if (linkData.position !== undefined) updateData.position = linkData.position;
-    if (linkData.backgroundColor !== undefined) updateData.background_color = linkData.backgroundColor;
-    if (linkData.textColor !== undefined) updateData.text_color = linkData.textColor;
-    if (linkData.borderRadius !== undefined) updateData.border_radius = linkData.borderRadius;
-    if (linkData.shadow !== undefined) updateData.shadow = linkData.shadow;
-    if (linkData.shadowColor !== undefined) updateData.shadow_color = linkData.shadowColor;
-    if (linkData.display_type !== undefined) updateData.display_type = linkData.display_type;
-
-    const { data, error } = await supabase
-      .from('links')
-      .update(updateData)
-      .eq('id', linkId)
-      .eq('user_id', userId)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error updating link:', error);
-      throw error;
-    }
-  
-    toast({
-      title: 'Link updated',
-      description: 'Your link has been updated successfully',
-    });
-  
-    return {
-      id: data.id,
-      title: data.title,
-      url: data.url,
-      icon: data.icon,
-      position: data.position,
-      backgroundColor: data.background_color,
-      textColor: data.text_color,
-      borderRadius: data.border_radius,
-      shadow: data.shadow,
-      shadowColor: data.shadow_color,
-      display_type: data.display_type as 'button' | 'icon' | 'video',
-    };
-  } catch (error) {
-    console.error('Error in updateLink:', error);
-    throw error;
-  }
-};
-
-// Delete link
-export const deleteLink = async (userId: string, linkId: string): Promise<void> => {
-  try {
-    // Get the position of the link to be deleted
-    const { data: linkToDelete, error: fetchError } = await supabase
-      .from('links')
-      .select('position')
-      .eq('id', linkId)
-      .eq('user_id', userId)
-      .single();
-
-    if (fetchError) {
-      console.error('Error fetching link to delete:', fetchError);
-      throw fetchError;
-    }
-
-    // Delete the link
-    const { error: deleteError } = await supabase
-      .from('links')
-      .delete()
-      .eq('id', linkId)
-      .eq('user_id', userId);
-
-    if (deleteError) {
-      console.error('Error deleting link:', deleteError);
-      throw deleteError;
-    }
-
-    // Update positions of remaining links
-    const { data: remainingLinks, error: fetchRemainingError } = await supabase
-      .from('links')
-      .select('id, position')
-      .eq('user_id', userId)
-      .gt('position', linkToDelete.position)
-      .order('position');
-
-    if (fetchRemainingError) {
-      console.error('Error fetching remaining links:', fetchRemainingError);
-      throw fetchRemainingError;
-    }
-
-    // Update positions of remaining links
-    for (const link of remainingLinks || []) {
-      const { error: updateError } = await supabase
-        .from('links')
-        .update({ position: link.position - 1 })
-        .eq('id', link.id)
-        .eq('user_id', userId);
-
-      if (updateError) {
-        console.error('Error updating link position:', updateError);
-        throw updateError;
+    // Update links if provided
+    if (profile.links && profile.links.length > 0) {
+      for (const link of profile.links) {
+        await saveLink({
+          ...link,
+          user_id: profile.id,
+        });
       }
     }
-  
-  toast({
-    title: 'Link deleted',
-    description: 'Your link has been deleted successfully',
-  });
   } catch (error) {
-    console.error('Error in deleteLink:', error);
+    console.error('Error saving profile:', error);
     throw error;
   }
 };
 
-// Reorder links
-export const reorderLinks = async (userId: string, links: Link[]): Promise<Link[]> => {
+// Function to get links by user ID
+export const getLinksByUserId = async (userId: string): Promise<Link[]> => {
   try {
-    // Update positions for all links
-    for (let i = 0; i < links.length; i++) {
-      const { error } = await supabase
-        .from('links')
-        .update({ position: i })
-        .eq('id', links[i].id)
-        .eq('user_id', userId);
-
-      if (error) {
-        console.error('Error updating link position:', error);
-        throw error;
-      }
-    }
-  
-  toast({
-    title: 'Links reordered',
-    description: 'Your links have been reordered successfully',
-  });
-  
-    // Return the updated links
     const { data, error } = await supabase
       .from('links')
       .select('*')
       .eq('user_id', userId)
-      .order('position');
+      .order('position', { ascending: true });
 
-    if (error) {
-      console.error('Error fetching reordered links:', error);
-      throw error;
-    }
+    if (error) throw error;
 
-    return data.map(link => ({
-      id: link.id,
-      title: link.title,
-      url: link.url,
-      icon: link.icon,
-      position: link.position,
-      backgroundColor: link.background_color,
-      textColor: link.text_color,
-      borderRadius: link.border_radius,
-      display_type: link.display_type as 'button' | 'icon' | 'video',
+    // Map links to add any missing properties with defaults
+    return (data || []).map((link: any) => ({
+      ...link,
+      background_color: link.background_color || '#f3f4f6',
+      text_color: link.text_color || '#000000',
+      border_radius: link.border_radius || '0.5rem',
+      shadow: link.shadow || undefined,
+      shadow_color: link.shadow_color || undefined,
     }));
   } catch (error) {
-    console.error('Error in reorderLinks:', error);
+    console.error('Error fetching links:', error);
     throw error;
   }
 };
 
-// Add image to slider
-export const addImage = async (userId: string, imageData: { url: string; alt: string }): Promise<SliderImage> => {
+// Function to save a link
+export const saveLink = async (link: Partial<Link>): Promise<Link> => {
   try {
-    // Get the count of existing images to determine the position
-    const { count, error: countError } = await supabase
-      .from('images')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', userId);
-
-    if (countError) {
-      console.error('Error counting images:', countError);
-      throw countError;
+    if (!link.user_id) {
+      throw new Error('User ID is required');
     }
 
-    const position = count || 0;
-    console.log("imageData",imageData,userId,position)
-    const { data, error } = await supabase
-      .from('images')
-      .insert([
-        {
-          user_id: userId,
-          url: imageData.url,
-          alt: imageData.alt,
-          position: position
-        }
-      ])
-      .select()
-      .single();
+    // If it's a new link, get the next position
+    if (!link.id) {
+      const { data } = await supabase
+        .from('links')
+        .select('position')
+        .eq('user_id', link.user_id)
+        .order('position', { ascending: false })
+        .limit(1);
 
-    if (error) {
-      console.error('Error adding image:', error);
-      throw error;
+      const nextPosition = data && data.length > 0 ? data[0].position + 1 : 0;
+      link.position = nextPosition;
     }
 
-    toast({
-      title: 'Image added',
-      description: 'Your image has been added to the slider',
-    });
+    let result;
+    
+    if (link.id) {
+      // Update existing link
+      const { data, error } = await supabase
+        .from('links')
+        .update(link)
+        .eq('id', link.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      result = data;
+    } else {
+      // Insert new link
+      const { data, error } = await supabase
+        .from('links')
+        .insert(link)
+        .select()
+        .single();
+
+      if (error) throw error;
+      result = data;
+    }
 
     return {
-      id: data.id,
-      url: data.url,
-      alt: data.alt
+      ...result,
+      background_color: result.background_color || '#f3f4f6',
+      text_color: result.text_color || '#000000',
+      border_radius: result.border_radius || '0.5rem',
+      shadow: result.shadow || undefined,
+      shadow_color: result.shadow_color || undefined,
     };
   } catch (error) {
-    console.error('Error in addImage:', error);
+    console.error('Error saving link:', error);
     throw error;
   }
 };
 
-// Delete image from slider
-export const deleteImage = async (userId: string, imageId: string): Promise<void> => {
+// Function to delete a link
+export const deleteLink = async (linkId: string): Promise<void> => {
   try {
-    // Get the image URL to delete from storage
-    const { data: imageToDelete, error: fetchError } = await supabase
+    const { error } = await supabase
+      .from('links')
+      .delete()
+      .eq('id', linkId);
+
+    if (error) throw error;
+  } catch (error) {
+    console.error('Error deleting link:', error);
+    throw error;
+  }
+};
+
+// Function to update link positions
+export const updateLinkPositions = async (links: { id: string; position: number }[]): Promise<void> => {
+  try {
+    for (const link of links) {
+      const { error } = await supabase
+        .from('links')
+        .update({ position: link.position })
+        .eq('id', link.id);
+
+      if (error) throw error;
+    }
+  } catch (error) {
+    console.error('Error updating link positions:', error);
+    throw error;
+  }
+};
+
+// Function to get images by user ID
+export const getImagesByUserId = async (userId: string): Promise<Image[]> => {
+  try {
+    const { data, error } = await supabase
       .from('images')
-      .select('url, position')
-      .eq('id', imageId)
+      .select('*')
       .eq('user_id', userId)
-      .single();
+      .order('position', { ascending: true });
 
-    if (fetchError) {
-      console.error('Error fetching image to delete:', fetchError);
-      throw fetchError;
+    if (error) throw error;
+    
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching images:', error);
+    throw error;
+  }
+};
+
+// Function to save an image
+export const saveImage = async (image: Partial<Image>, userId: string): Promise<Image> => {
+  try {
+    if (!userId) {
+      throw new Error('User ID is required');
     }
 
-    // Extract the file path from the URL
-    // The URL format is https://[domain]/storage/v1/object/public/avatars/[file_path]
-    const urlParts = imageToDelete.url.split('/');
-    const filePath = urlParts.slice(urlParts.indexOf('avatars') + 1).join('/');
+    // If it's a new image, get the next position
+    if (!image.id) {
+      const { data } = await supabase
+        .from('images')
+        .select('position')
+        .eq('user_id', userId)
+        .order('position', { ascending: false })
+        .limit(1);
 
-    // Delete the image from storage
-    if (filePath) {
-      const { error: storageError } = await supabase.storage
-        .from('avatars')
-        .remove([filePath]);
+      const nextPosition = data && data.length > 0 ? data[0].position + 1 : 0;
+      
+      const { data: newImage, error } = await supabase
+        .from('images')
+        .insert({
+          url: image.url,
+          alt: image.alt || '',
+          position: nextPosition,
+          user_id: userId
+        })
+        .select()
+        .single();
 
-      if (storageError) {
-        console.error('Error deleting image from storage:', storageError);
-        // Continue with database deletion even if storage delete fails
-      }
+      if (error) throw error;
+      return newImage;
+    } else {
+      // Update existing image
+      const { data, error } = await supabase
+        .from('images')
+        .update({
+          url: image.url,
+          alt: image.alt
+        })
+        .eq('id', image.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
     }
+  } catch (error) {
+    console.error('Error saving image:', error);
+    throw error;
+  }
+};
 
-    // Delete the image record
-    const { error: deleteError } = await supabase
+// Function to delete an image
+export const deleteImage = async (imageId: string): Promise<void> => {
+  try {
+    const { error } = await supabase
       .from('images')
       .delete()
-      .eq('id', imageId)
-      .eq('user_id', userId);
+      .eq('id', imageId);
 
-    if (deleteError) {
-      console.error('Error deleting image:', deleteError);
-      throw deleteError;
-    }
+    if (error) throw error;
+  } catch (error) {
+    console.error('Error deleting image:', error);
+    throw error;
+  }
+};
 
-    // Update positions of remaining images
-    const { data: remainingImages, error: fetchRemainingError } = await supabase
-      .from('images')
-      .select('id, position')
-      .eq('user_id', userId)
-      .gt('position', imageToDelete.position)
-      .order('position');
-
-    if (fetchRemainingError) {
-      console.error('Error fetching remaining images:', fetchRemainingError);
-      throw fetchRemainingError;
-    }
-
-    // Update positions of remaining images
-    for (const image of remainingImages || []) {
-      const { error: updateError } = await supabase
+// Function to update image positions
+export const updateImagePositions = async (images: { id: string; position: number }[]): Promise<void> => {
+  try {
+    for (const image of images) {
+      const { error } = await supabase
         .from('images')
-        .update({ position: image.position - 1 })
-        .eq('id', image.id)
-        .eq('user_id', userId);
+        .update({ position: image.position })
+        .eq('id', image.id);
 
-      if (updateError) {
-        console.error('Error updating image position:', updateError);
-        throw updateError;
-      }
+      if (error) throw error;
     }
-
-    toast({
-      title: 'Image deleted',
-      description: 'Your image has been removed from the slider',
-    });
   } catch (error) {
-    console.error('Error in deleteImage:', error);
-    throw error;
-  }
-};
-
-// Toggle infinite slider mode
-export const toggleInfiniteSlider = async (userId: string, useInfiniteSlider: boolean): Promise<void> => {
-  try {
-    const { error } = await supabase
-      .from('profiles')
-      .update({
-        use_infinite_slider: useInfiniteSlider
-      })
-      .eq('id', userId);
-
-    if (error) {
-      console.error('Error updating infinite slider mode:', error);
-      throw error;
-    }
-
-    toast({
-      title: 'Slider mode updated',
-      description: useInfiniteSlider ? 'Infinite slider mode enabled' : 'Standard carousel mode enabled',
-    });
-  } catch (error) {
-    console.error('Error in toggleInfiniteSlider:', error);
-    throw error;
-  }
-};
-
-// Update image layout settings
-export const updateImageLayout = async (
-  userId: string, 
-  layout: 'row' | 'column' | 'grid',
-  gridColumns?: 2 | 3 | 4
-): Promise<void> => {
-  try {
-    const updateData: Record<string, unknown> = {
-      image_layout: layout
-    };
-    
-    if (layout === 'grid' && gridColumns) {
-      updateData.grid_columns = gridColumns;
-    }
-    
-    const { error } = await supabase
-      .from('profiles')
-      .update(updateData)
-      .eq('id', userId);
-
-    if (error) {
-      console.error('Error updating image layout:', error);
-      throw error;
-    }
-
-    toast({
-      title: 'Image layout updated',
-      description: `Image layout changed to ${layout}${layout === 'grid' ? ` with ${gridColumns} columns` : ''}`,
-    });
-  } catch (error) {
-    console.error('Error in updateImageLayout:', error);
+    console.error('Error updating image positions:', error);
     throw error;
   }
 };

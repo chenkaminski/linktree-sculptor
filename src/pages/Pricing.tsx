@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import Navigation from '@/components/Navigation';
 
 const PricingPage = () => {
   const navigate = useNavigate();
@@ -21,6 +22,8 @@ const PricingPage = () => {
   return (
     <div className="bg-gradient-to-br from-purple-50 to-indigo-100 min-h-screen">
       <div className="container mx-auto px-4 py-16 max-w-6xl">
+        <Navigation />
+        
         <div className="text-center mb-16">
           <h1 className="text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-indigo-600">
             Choose Your Plan

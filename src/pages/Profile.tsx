@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { UserProfile, getProfileByUsername } from '@/services/linkService';
@@ -238,8 +237,8 @@ const Profile = () => {
                 rel="noopener noreferrer"
                 className="w-10 h-10 rounded-full flex items-center justify-center transition-transform hover:scale-110"
                 style={{
-                  backgroundColor: link.backgroundColor || '#f3f4f6',
-                  color: link.textColor || '#000000'
+                  backgroundColor: link.background_color || '#f3f4f6',
+                  color: link.text_color || '#000000'
                 }}
                 title={link.title}
               >
