@@ -11,6 +11,8 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 import Profile from "./pages/Profile";
+import Pricing from "./pages/Pricing";
+import Discovery from "./pages/Discovery";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
@@ -32,6 +34,8 @@ const App = () => (
               </ProtectedRoute>
             } />
             <Route path="/u/:username" element={<Profile />} />
+            <Route path="/pricing" element={<Pricing />} />
+            <Route path="/discover" element={<Discovery />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

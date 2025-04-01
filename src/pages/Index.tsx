@@ -2,66 +2,15 @@
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import Navigation from '@/components/Navigation';
 
 const Index = () => {
   const { user } = useAuth();
-  const [username, setUsername] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchUserProfile = async () => {
-      if (!user) return;
-      
-      try {
-        const { data } = await supabase
-          .from('profiles')
-          .select('username')
-          .eq('id', user.id)
-          .single();
-        
-        if (data) {
-          setUsername(data.username);
-        }
-      } catch (error) {
-        console.error('Error fetching profile:', error);
-      }
-    };
-
-    fetchUserProfile();
-  }, [user]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100">
       <div className="container mx-auto px-4 py-12">
-        <header className="flex justify-between items-center mb-16">
-          <div className="flex items-center">
-            <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-indigo-600">LinkTree Clone</h1>
-          </div>
-          <div className="flex items-center gap-4">
-            {user ? (
-              <>
-                <Link to="/dashboard">
-                  <Button variant="ghost">Dashboard</Button>
-                </Link>
-                {username && (
-                  <Link to={`/u/${username}`}>
-                    <Button variant="ghost">My Profile</Button>
-                  </Link>
-                )}
-              </>
-            ) : (
-              <>
-                <Link to="/login">
-                  <Button variant="ghost">Login</Button>
-                </Link>
-                <Link to="/register">
-                  <Button variant="default">Sign Up</Button>
-                </Link>
-              </>
-            )}
-          </div>
-        </header>
+        <Navigation />
 
         <main className="flex flex-col md:flex-row items-center gap-12 mt-12">
           <div className="md:w-1/2">
