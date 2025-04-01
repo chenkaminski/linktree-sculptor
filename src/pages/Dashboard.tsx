@@ -32,6 +32,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import DashboardLayout from '@/components/DashboardLayout';
 
 const SortableLinkItem = ({ link, onEdit, onDelete, onStyleUpdate }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: link.id });
@@ -55,7 +56,18 @@ const SortableLinkItem = ({ link, onEdit, onDelete, onStyleUpdate }) => {
   );
 };
 
-const PreviewCard = ({ profile, profileForm, renderSocialIcons, themes }) => {
+// Define the linkStyle function before PreviewCard component
+const getLinkStyle = (link: LinkType, fontFamily?: string) => {
+  return {
+    borderRadius: link.border_radius || '0.5rem',
+    backgroundColor: link.background_color || 'transparent',
+    color: link.text_color || '#000',
+    boxShadow: link.shadow || 'none',
+    fontFamily: fontFamily || 'Inter',
+  };
+};
+
+const PreviewCard = ({ profile, profileForm, renderSocialIcons, themes, getLinkStyle }) => {
   return (
     <Card>
       <CardHeader>
@@ -109,13 +121,7 @@ const PreviewCard = ({ profile, profileForm, renderSocialIcons, themes }) => {
                 <div 
                   key={link.id}
                   className={`w-full py-3 px-5 rounded-lg flex items-center justify-center gap-2 font-medium ${profile?.backgroundImage ? 'bg-white/20 backdrop-blur-sm text-white' : themes.find(t => t.id === profile?.theme)?.buttonStyle || 'bg-white text-gray-800'}`}
-                  style={{
-                    backgroundColor: link.backgroundColor,
-                    color: link.textColor,
-                    borderRadius: link.borderRadius,
-                    boxShadow: link.shadow,
-                    fontFamily: profile?.fontFamily || 'Inter',
-                  }}
+                  style={getLinkStyle(link, profile?.fontFamily)}
                 >
                   {link.title}
                 </div>
@@ -707,33 +713,7 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <Link to="/" className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-indigo-600">
-            LinkTree Clone
-          </Link>
-          
-          <div className="flex items-center gap-6">
-            {profile && (
-              <Link 
-                to={`/u/${profile.username}`} 
-                className="text-sm text-gray-600 hover:text-purple-600 flex items-center gap-1"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <LinkIcon size={16} />
-                View my page
-              </Link>
-            )}
-            <Button variant="ghost" size="sm" onClick={signOut}>
-              <LogOut size={16} className="mr-2" />
-              Log out
-            </Button>
-          </div>
-        </div>
-      </header>
-      
+    <DashboardLayout>
       <div className="container mx-auto px-4 py-8">
         <Tabs defaultValue="links">
           <TabsList className="mb-8">
@@ -845,6 +825,7 @@ const Dashboard = () => {
                     profileForm={profileForm}
                     renderSocialIcons={renderSocialIcons}
                     themes={themes}
+                    getLinkStyle={getLinkStyle}
                   />
                 </div>
               </div>
@@ -920,6 +901,7 @@ const Dashboard = () => {
                     profileForm={profileForm}
                     renderSocialIcons={renderSocialIcons}
                     themes={themes}
+                    getLinkStyle={getLinkStyle}
                   />
                 </div>
               </div>
@@ -958,6 +940,7 @@ const Dashboard = () => {
                   profileForm={profileForm}
                   renderSocialIcons={renderSocialIcons}
                   themes={themes}
+                  getLinkStyle={getLinkStyle}
                 />
               </div>
             </div>
@@ -1043,6 +1026,7 @@ const Dashboard = () => {
                     profileForm={profileForm}
                     renderSocialIcons={renderSocialIcons}
                     themes={themes}
+                    getLinkStyle={getLinkStyle}
                   />
                 </div>
               </div>
@@ -1214,6 +1198,7 @@ const Dashboard = () => {
                     profileForm={profileForm}
                     renderSocialIcons={renderSocialIcons}
                     themes={themes}
+                    getLinkStyle={getLinkStyle}
                   />
                 </div>
               </div>
@@ -1221,7 +1206,7 @@ const Dashboard = () => {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </DashboardLayout>
   );
 };
 

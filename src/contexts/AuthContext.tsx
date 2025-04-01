@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,7 +10,9 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   updateProfile: (data: { username?: string; display_name?: string }) => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -120,6 +121,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const signInWithGoogle = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`
+        }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: 'Success',
+        description: 'You have been signed in with Google',
+      });
+    } catch (error: any) {
+      console.error('Google sign in error:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to sign in with Google',
+        variant: 'destructive',
+      });
+      throw error;
+    }
+  };
+
   const updateProfile = async (data: { username?: string; display_name?: string }) => {
     try {
       if (!user) throw new Error('User not authenticated');
@@ -147,18 +176,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const resetPassword = async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    if (error) throw error;
+  };
+
+  const value = {
+    user,
+    session,
+    loading,
+    signIn,
+    signUp,
+    signOut,
+    signInWithGoogle,
+    updateProfile,
+    resetPassword,
+  };
+
   return (
-    <AuthContext.Provider 
-      value={{ 
-        user, 
-        session, 
-        loading, 
-        signIn, 
-        signUp, 
-        signOut, 
-        updateProfile 
-      }}
-    >
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
