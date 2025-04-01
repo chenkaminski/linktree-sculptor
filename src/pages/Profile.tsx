@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { UserProfile, getProfileByUsername } from '@/services/linkService';
@@ -18,15 +19,26 @@ import {
   Figma,
   Slack,
   Link as LinkIcon,
-  Share2
+  Share2,
+  QrCode,
+  Copy
 } from 'lucide-react';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Button } from '@/components/ui/button';
 import { toast } from "@/components/ui/use-toast";
+import QRCodeCanvas from '@/components/QRCodeCanvas';
 
 const Profile = () => {
   const { username } = useParams<{ username: string }>();
@@ -35,6 +47,7 @@ const Profile = () => {
   const [error, setError] = useState<string | null>(null);
   const [shareUrl, setShareUrl] = useState('');
   const [isShareOpen, setIsShareOpen] = useState(false);
+  const [isQrDialogOpen, setIsQrDialogOpen] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -58,6 +71,16 @@ const Profile = () => {
     fetchProfile();
     setShareUrl(window.location.href);
   }, [username]);
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(shareUrl).then(() => {
+      toast({
+        title: "Link copied to clipboard!",
+        description: "You can now paste it anywhere.",
+      });
+    });
+    setIsShareOpen(false);
+  };
 
   const handleShare = (platform: string) => {
     let shareLink = '';
@@ -143,7 +166,7 @@ const Profile = () => {
         backgroundPosition: 'center',
       } : undefined}
     >
-      <div className="absolute top-4 left-4 z-10">
+      <div className="absolute top-4 left-4 z-10 flex gap-2">
         <Popover open={isShareOpen} onOpenChange={setIsShareOpen}>
           <PopoverTrigger asChild>
             <Button variant="outline" size="icon" className="rounded-full bg-white/80 backdrop-blur-sm shadow-sm hover:bg-white/90">
@@ -151,9 +174,25 @@ const Profile = () => {
               <span className="sr-only">Share Profile</span>
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-60 p-3">
+          <PopoverContent className="w-64 p-3">
             <div className="space-y-2">
               <h4 className="font-medium text-sm mb-2">Share Profile</h4>
+              
+              <div className="flex items-center justify-between p-2 bg-gray-50 rounded-md mb-3">
+                <div className="truncate flex-1 text-sm text-gray-600">
+                  {shareUrl}
+                </div>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="ml-2 h-8 w-8 p-0" 
+                  onClick={handleCopyLink}
+                >
+                  <Copy className="h-4 w-4" />
+                  <span className="sr-only">Copy link</span>
+                </Button>
+              </div>
+              
               <div className="flex flex-wrap gap-2">
                 <Button 
                   variant="outline" 
@@ -209,15 +248,42 @@ const Profile = () => {
                   LinkedIn
                 </Button>
                 
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="flex gap-2 items-center w-full" 
-                  onClick={() => handleShare('copy')}
-                >
-                  <LinkIcon className="h-4 w-4" />
-                  Copy Link
-                </Button>
+                <Dialog open={isQrDialogOpen} onOpenChange={setIsQrDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex gap-2 items-center w-full"
+                    >
+                      <QrCode className="h-4 w-4" />
+                      QR Code
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Share via QR Code</DialogTitle>
+                      <DialogDescription>
+                        Scan this QR code to visit this profile
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex justify-center p-4">
+                      <QRCodeCanvas
+                        value={shareUrl}
+                        size={250}
+                        bgColor="#ffffff"
+                        fgColor="#000000"
+                        level="L"
+                        includeMargin={false}
+                      />
+                    </div>
+                    <div className="flex justify-center">
+                      <Button onClick={handleCopyLink} className="flex items-center gap-2">
+                        <Copy className="h-4 w-4" />
+                        Copy Profile Link
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </div>
             </div>
           </PopoverContent>
