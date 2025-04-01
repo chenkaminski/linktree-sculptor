@@ -34,6 +34,7 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [shareUrl, setShareUrl] = useState('');
+  const [isShareOpen, setIsShareOpen] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -75,6 +76,13 @@ const Profile = () => {
       case 'linkedin':
         shareLink = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`;
         break;
+      case 'instagram':
+        toast({
+          title: "Instagram Sharing",
+          description: "Copy the link and share it in your Instagram bio or story.",
+        });
+        navigator.clipboard.writeText(shareUrl);
+        return;
       case 'copy':
         navigator.clipboard.writeText(shareUrl).then(() => {
           toast({
@@ -85,7 +93,9 @@ const Profile = () => {
         return;
     }
     
-    window.open(shareLink, '_blank', 'noopener,noreferrer');
+    if (shareLink) {
+      window.open(shareLink, '_blank', 'noopener,noreferrer');
+    }
   };
 
   if (loading) {
@@ -117,7 +127,6 @@ const Profile = () => {
     color: profile.fontColor || undefined,
   };
 
-  // Split links into social icons, videos, and regular links
   const socialLinks = profile.showSocialIcons 
     ? profile.links.filter(link => link.display_type === 'icon')
     : [];
@@ -134,15 +143,15 @@ const Profile = () => {
         backgroundPosition: 'center',
       } : undefined}
     >
-      {/* Share Button */}
       <div className="absolute top-4 left-4 z-10">
-        <Popover>
+        <Popover open={isShareOpen} onOpenChange={setIsShareOpen}>
           <PopoverTrigger asChild>
-            <Button variant="outline" size="icon" className="rounded-full bg-white/80 backdrop-blur-sm shadow-sm">
+            <Button variant="outline" size="icon" className="rounded-full bg-white/80 backdrop-blur-sm shadow-sm hover:bg-white/90">
               <Share2 className="h-4 w-4" />
+              <span className="sr-only">Share Profile</span>
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-56 p-2">
+          <PopoverContent className="w-60 p-3">
             <div className="space-y-2">
               <h4 className="font-medium text-sm mb-2">Share Profile</h4>
               <div className="flex flex-wrap gap-2">
@@ -159,6 +168,17 @@ const Profile = () => {
                   </span>
                   WhatsApp
                 </Button>
+                
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex gap-2 items-center w-full" 
+                  onClick={() => handleShare('instagram')}
+                >
+                  <Instagram className="h-4 w-4 text-pink-600" />
+                  Instagram
+                </Button>
+                
                 <Button 
                   variant="outline" 
                   size="sm" 
@@ -168,6 +188,7 @@ const Profile = () => {
                   <Facebook className="h-4 w-4 text-blue-600" />
                   Facebook
                 </Button>
+                
                 <Button 
                   variant="outline" 
                   size="sm" 
@@ -177,6 +198,7 @@ const Profile = () => {
                   <Twitter className="h-4 w-4 text-blue-400" />
                   Twitter/X
                 </Button>
+                
                 <Button 
                   variant="outline" 
                   size="sm" 
@@ -186,6 +208,7 @@ const Profile = () => {
                   <Linkedin className="h-4 w-4 text-blue-700" />
                   LinkedIn
                 </Button>
+                
                 <Button 
                   variant="outline" 
                   size="sm" 
@@ -226,7 +249,6 @@ const Profile = () => {
           {profile.bio}
         </p>
         
-        {/* Social icons row */}
         {profile.showSocialIcons && socialLinks.length > 0 && (
           <div className="flex flex-wrap justify-center gap-3 mb-6">
             {socialLinks.map((link) => (
@@ -248,9 +270,7 @@ const Profile = () => {
           </div>
         )}
         
-        {/* Regular links and videos should come before images */}
         <div className="w-[80%] space-y-3 mb-8">
-          {/* Regular links */}
           {regularLinks.map((link) => (
             <LinkItem
               key={link.id}
@@ -259,7 +279,6 @@ const Profile = () => {
             />
           ))}
           
-          {/* Video embeds */}
           {videoLinks.length > 0 && (
             <div className="space-y-6 my-6">
               {videoLinks.map((link) => (
@@ -279,7 +298,6 @@ const Profile = () => {
           )}
         </div>
         
-        {/* Image slider - moved after links */}
         {profile.images && profile.images.length > 0 && (
           <div className="w-full mb-6 overflow-hidden rounded-lg">
             {profile.useInfiniteSlider ? (
@@ -337,7 +355,6 @@ const Profile = () => {
         )}
         
         <div className="mt-auto pt-8 text-center">
-          {/* Logo display */}
           {profile.logo && (
             <div className="mb-4 flex justify-center">
               <img 
@@ -360,7 +377,6 @@ const Profile = () => {
   );
 };
 
-// Helper function to get social icons
 const getSocialIcon = (iconName: string | undefined, size = 16) => {
   if (!iconName) return <LinkIcon size={size} />;
   
