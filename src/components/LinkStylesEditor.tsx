@@ -24,6 +24,8 @@ const LinkStylesEditor = ({ link, onSubmit, onCancel }: LinkStylesEditorProps) =
   const [backgroundColor, setBackgroundColor] = useState(link.backgroundColor || '#f3f4f6');
   const [textColor, setTextColor] = useState(link.textColor || '#000000');
   const [borderRadius, setBorderRadius] = useState(link.borderRadius || '0.5rem');
+  const [shadow, setShadow] = useState(link.shadow || 'none');
+  const [shadowColor, setShadowColor] = useState(link.shadowColor || 'rgba(0, 0, 0, 0.1)');
   const [display_type, setDisplayType] = useState<'button' | 'icon' | 'video'>(link.display_type as 'button' | 'icon' | 'video' || 'button');
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -33,6 +35,8 @@ const LinkStylesEditor = ({ link, onSubmit, onCancel }: LinkStylesEditorProps) =
       backgroundColor,
       textColor,
       borderRadius,
+      shadow,
+      shadowColor,
       display_type
     });
   };
@@ -56,12 +60,44 @@ const LinkStylesEditor = ({ link, onSubmit, onCancel }: LinkStylesEditorProps) =
     { value: '9999px', label: 'Full' },
   ];
 
+  // Generate shadow styles with the selected shadow color
+  const getShadowValue = (shadowType: string) => {
+    switch(shadowType) {
+      case 'none':
+        return 'none';
+      case 'Subtle':
+        return `0 1px 2px ${shadowColor}`;
+      case 'Small':
+        return `0 1px 3px ${shadowColor}, 0 1px 2px ${shadowColor}`;
+      case 'Medium':
+        return `0 4px 6px -1px ${shadowColor}, 0 2px 4px -1px ${shadowColor}`;
+      case 'Large':
+        return `0 10px 15px -3px ${shadowColor}, 0 4px 6px -2px ${shadowColor}`;
+      case 'Extra Large':
+        return `0 20px 25px -5px ${shadowColor}, 0 10px 10px -5px ${shadowColor}`;
+      default:
+        return shadowType; // If it's a custom value, return as is
+    }
+  };
+
+  const shadowOptions = [
+    { value: 'none', label: 'None' },
+    { value: 'Subtle', label: 'Subtle' },
+    { value: 'Small', label: 'Small' },
+    { value: 'Medium', label: 'Medium' },
+    { value: 'Large', label: 'Large' },
+    { value: 'Extra Large', label: 'Extra Large' },
+  ];
+
   // This handler ensures type safety when changing display type
   const handleDisplayTypeChange = (value: string) => {
     if (value === 'button' || value === 'icon' || value === 'video') {
       setDisplayType(value);
     }
   };
+
+  // Get the actual shadow value based on the selected option
+  const actualShadow = getShadowValue(shadow);
 
   return (
     <Card className="border shadow-sm w-full mb-3">
@@ -129,7 +165,7 @@ const LinkStylesEditor = ({ link, onSubmit, onCancel }: LinkStylesEditorProps) =
                 </div>
               </div>
               
-              <div className="grid grid-cols-2 gap-4">
+              <div>
                 <div className="space-y-2">
                   <Label htmlFor="background-color">Background Color</Label>
                   <div className="flex">
@@ -167,7 +203,7 @@ const LinkStylesEditor = ({ link, onSubmit, onCancel }: LinkStylesEditorProps) =
                 </div>
               </div>
               
-              <div className="space-y-2">
+              <div>
                 <Label htmlFor="border-radius">Border Radius</Label>
                 <Select 
                   value={borderRadius} 
@@ -186,6 +222,49 @@ const LinkStylesEditor = ({ link, onSubmit, onCancel }: LinkStylesEditorProps) =
                 </Select>
               </div>
               
+              <div>
+                <Label htmlFor="shadow">Shadow</Label>
+                <Select
+                  value={shadow}
+                  onValueChange={setShadow}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select shadow style" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {shadowOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              {shadow !== 'none' && (
+                <div className="space-y-2">
+                  <Label htmlFor="shadow-color">Shadow Color</Label>
+                  <div className="flex">
+                    <Input
+                      id="shadow-color"
+                      type="color"
+                      value={shadowColor.startsWith('rgba') ? '#000000' : shadowColor}
+                      onChange={(e) => setShadowColor(e.target.value)}
+                      className="w-12 p-1 h-10"
+                    />
+                    <Input
+                      value={shadowColor}
+                      onChange={(e) => setShadowColor(e.target.value)}
+                      className="flex-1 ml-2"
+                      placeholder="rgba(0, 0, 0, 0.1) or #000000"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    Use rgba() format for transparent shadows, e.g. rgba(0, 0, 0, 0.1)
+                  </p>
+                </div>
+              )}
+              
               <div className="p-4 rounded-lg border mt-4">
                 <p className="text-sm text-gray-500 mb-2">Preview:</p>
                 <div 
@@ -193,7 +272,8 @@ const LinkStylesEditor = ({ link, onSubmit, onCancel }: LinkStylesEditorProps) =
                   style={{ 
                     backgroundColor, 
                     color: textColor,
-                    borderRadius
+                    borderRadius,
+                    boxShadow: actualShadow
                   }}
                 >
                   {link.title}

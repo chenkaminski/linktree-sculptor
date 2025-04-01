@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LogOut, LinkIcon, User, Settings, Share2, Palette, Image as ImageIcon } from 'lucide-react';
+import { LogOut, LinkIcon, User, Settings, Share2, Palette, Image as ImageIcon, Facebook, Twitter, Instagram, Linkedin, Github, Youtube, Mail, Globe, Twitch, Dribbble, Figma, Slack } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import LinkForm from '@/components/LinkForm';
@@ -43,6 +43,157 @@ const SortableLinkItem = ({ link, onEdit, onDelete, onStyleUpdate }) => {
         dragHandleProps={{ ...attributes, ...listeners }}
       />
     </div>
+  );
+};
+
+const PreviewCard = ({ profile, profileForm, renderSocialIcons, themes }) => {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Preview</CardTitle>
+        <CardDescription>
+          See how your page looks
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="border border-gray-200 rounded-lg h-[500px] overflow-hidden">
+          <div 
+            className="h-full w-full p-8 flex flex-col items-center overflow-y-auto"
+            style={profile?.backgroundImage ? {
+              backgroundImage: `url(${profile.backgroundImage})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            } : {
+              background: themes.find(t => t.id === profile?.theme)?.background || themes[0].background
+            }}
+          >
+            <div className="w-20 h-20 rounded-full overflow-hidden mb-4 bg-white/20">
+              <img 
+                src={profile?.avatar} 
+                alt={(profileForm?.displayName || profile?.displayName) || 'Avatar'} 
+                className="w-full h-full object-cover" 
+              />
+            </div>
+            <h3 
+              className={`text-xl font-semibold mb-1 ${profile?.backgroundImage ? 'text-white' : themes.find(t => t.id === profile?.theme)?.textColor || 'text-white'}`}
+              style={{ 
+                fontFamily: profile?.fontFamily || 'Inter',
+                color: profile?.fontColor || undefined
+              }}
+            >
+              {(profileForm?.displayName || profile?.displayName) || 'Your Name'}
+            </h3>
+            <p 
+              className={`text-sm mb-6 text-center ${profile?.backgroundImage ? 'text-white/80' : (themes.find(t => t.id === profile?.theme)?.textColor || 'text-white') + ' opacity-80'}`}
+              style={{ 
+                fontFamily: profile?.fontFamily || 'Inter',
+                color: profile?.fontColor ? profile?.fontColor + '99' : undefined
+              }}
+            >
+              {(profileForm?.bio || profile?.bio) || 'Your bio goes here'}
+            </p>
+            
+            {profile?.showSocialIcons && renderSocialIcons()}
+            
+            <div className="w-full max-w-sm space-y-3">
+              {profile?.links.filter(l => !profile.showSocialIcons || l.display_type !== 'icon').map((link) => (
+                <div 
+                  key={link.id}
+                  className={`w-full py-3 px-5 rounded-lg flex items-center justify-center gap-2 font-medium ${profile?.backgroundImage ? 'bg-white/20 backdrop-blur-sm text-white' : themes.find(t => t.id === profile?.theme)?.buttonStyle || 'bg-white text-gray-800'}`}
+                  style={{
+                    backgroundColor: link.backgroundColor,
+                    color: link.textColor,
+                    borderRadius: link.borderRadius,
+                    boxShadow: link.shadow,
+                    fontFamily: profile?.fontFamily || 'Inter',
+                  }}
+                >
+                  {link.title}
+                </div>
+              ))}
+              
+              {/* Display images preview */}
+              {profile?.images && profile.images.length > 0 && (
+                <div className="w-full mt-4 mb-6 overflow-hidden rounded-lg">
+                  {profile.useInfiniteSlider ? (
+                    <InfiniteSlider duration={30} gap={8} className="w-full">
+                      {profile.images.map((image) => (
+                        <div key={image.id} className="flex-shrink-0 w-32 h-24 rounded-lg overflow-hidden">
+                          <img 
+                            src={image.url}
+                            alt={image.alt}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      ))}
+                    </InfiniteSlider>
+                  ) : profile.imageLayout === 'row' ? (
+                    <div className="overflow-x-auto py-2">
+                      <div className="flex gap-2">
+                        {profile.images.map((image) => (
+                          <div key={image.id} className="flex-shrink-0 w-32 h-24 rounded-lg overflow-hidden">
+                            <img 
+                              src={image.url}
+                              alt={image.alt}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : profile.imageLayout === 'column' ? (
+                    <div className="flex flex-col gap-2 max-h-[200px] overflow-y-auto">
+                      {profile.images.map((image) => (
+                        <div key={image.id} className="w-full h-24 rounded-lg overflow-hidden">
+                          <img 
+                            src={image.url}
+                            alt={image.alt}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className={`grid gap-2 ${
+                      profile.gridColumns === 2 ? 'grid-cols-2' :
+                      profile.gridColumns === 3 ? 'grid-cols-3' :
+                      profile.gridColumns === 4 ? 'grid-cols-4' : 'grid-cols-2'
+                    }`}>
+                      {profile.images.map((image) => (
+                        <div key={image.id} className="aspect-video rounded-lg overflow-hidden">
+                          <img 
+                            src={image.url}
+                            alt={image.alt}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {profile?.links.length === 0 && profile?.images?.length === 0 && (
+                <div className={`text-center py-8 ${profile?.backgroundImage ? 'text-white/80' : (themes.find(t => t.id === profile?.theme)?.textColor || 'text-white') + ' opacity-80'}`}>
+                  <p>Add some links or images to see them here</p>
+                </div>
+              )}
+            </div>
+            
+            {/* Logo at the bottom */}
+            {profile?.logo && (
+              <div className="mt-auto pt-6 mb-4 flex justify-center">
+                <img 
+                  src={profile.logo}
+                  alt={`${profile.displayName} logo`}
+                  className="max-h-12 max-w-[180px] object-contain"
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 
@@ -349,27 +500,62 @@ const Dashboard = () => {
   const renderSocialIcons = () => {
     if (!profile) return null;
     
-    const socialLinks = profile.links.filter(link => link.icon && 
-      (link.display_type === 'icon' || link.icon));
+    const socialLinks = profile.links.filter(link => link.display_type === 'icon');
       
     if (socialLinks.length === 0) return null;
     
     return (
       <div className="flex flex-wrap justify-center gap-3 mb-6">
-        {socialLinks.slice(0, 5).map((link, index) => (
+        {socialLinks.map((link) => (
           <div 
-            key={index}
-            className="w-8 h-8 rounded-full flex items-center justify-center"
+            key={link.id}
+            className="w-10 h-10 rounded-full flex items-center justify-center transition-transform hover:scale-110"
             style={{
               backgroundColor: link.backgroundColor || '#f3f4f6',
               color: link.textColor || '#000000'
             }}
+            title={link.title}
           >
-            <span className="text-xs">🔗</span>
+            {getSocialIcon(link.icon, 18)}
           </div>
         ))}
       </div>
     );
+  };
+
+  // Helper function to get social icons
+  const getSocialIcon = (iconName: string | undefined, size = 16) => {
+    if (!iconName) return <LinkIcon size={size} />;
+    
+    switch (iconName.toLowerCase()) {
+      case 'facebook':
+        return <Facebook size={size} />;
+      case 'twitter':
+      case 'twitter/x':
+        return <Twitter size={size} />;
+      case 'instagram':
+        return <Instagram size={size} />;
+      case 'linkedin':
+        return <Linkedin size={size} />;
+      case 'github':
+        return <Github size={size} />;
+      case 'youtube':
+        return <Youtube size={size} />;
+      case 'email':
+        return <Mail size={size} />;
+      case 'website':
+        return <Globe size={size} />;
+      case 'twitch':
+        return <Twitch size={size} />;
+      case 'dribbble':
+        return <Dribbble size={size} />;
+      case 'figma':
+        return <Figma size={size} />;
+      case 'slack':
+        return <Slack size={size} />;
+      default:
+        return <LinkIcon size={size} />;
+    }
   };
 
   const handleAddImage = async (image: { url: string; alt: string }) => {
@@ -634,79 +820,12 @@ const Dashboard = () => {
               
               <div>
                 <div className="sticky top-8">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Preview</CardTitle>
-                      <CardDescription>
-                        See how your page looks
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="border border-gray-200 rounded-lg h-[500px] overflow-hidden">
-                        <div 
-                          className="h-full w-full p-8 flex flex-col items-center overflow-y-auto"
-                          style={profile?.backgroundImage ? {
-                            backgroundImage: `url(${profile.backgroundImage})`,
-                            backgroundSize: 'cover',
-                            backgroundPosition: 'center',
-                          } : {
-                            background: themes.find(t => t.id === profile?.theme)?.background || themes[0].background
-                          }}
-                        >
-                          <div className="w-20 h-20 rounded-full overflow-hidden mb-4 bg-white/20">
-                            <img 
-                              src={profile?.avatar} 
-                              alt={profile?.displayName || 'Avatar'} 
-                              className="w-full h-full object-cover" 
-                            />
-                          </div>
-                          <h3 
-                            className={`text-xl font-semibold mb-1 ${profile?.backgroundImage ? 'text-white' : themes.find(t => t.id === profile?.theme)?.textColor || 'text-white'}`}
-                            style={{ 
-                              fontFamily: profile?.fontFamily || 'Inter',
-                              color: profile?.fontColor || undefined
-                            }}
-                          >
-                            {profile?.displayName || 'Your Name'}
-                          </h3>
-                          <p 
-                            className={`text-sm mb-6 text-center ${profile?.backgroundImage ? 'text-white/80' : (themes.find(t => t.id === profile?.theme)?.textColor || 'text-white') + ' opacity-80'}`}
-                            style={{ 
-                              fontFamily: profile?.fontFamily || 'Inter',
-                              color: profile?.fontColor ? profile?.fontColor + '99' : undefined
-                            }}
-                          >
-                            {profile?.bio || 'Your bio goes here'}
-                          </p>
-                          
-                          {profile?.showSocialIcons && renderSocialIcons()}
-                          
-                          <div className="w-full max-w-sm space-y-3">
-                            {profile?.links.filter(l => !profile.showSocialIcons || l.display_type !== 'icon').map((link) => (
-                              <div 
-                                key={link.id}
-                                className={`w-full py-3 px-5 rounded-lg flex items-center justify-center gap-2 font-medium ${profile?.backgroundImage ? 'bg-white/20 backdrop-blur-sm text-white' : themes.find(t => t.id === profile?.theme)?.buttonStyle || 'bg-white text-gray-800'}`}
-                                style={{
-                                  backgroundColor: link.backgroundColor,
-                                  color: link.textColor,
-                                  borderRadius: link.borderRadius,
-                                  fontFamily: profile?.fontFamily || 'Inter',
-                                }}
-                              >
-                                {link.title}
-                              </div>
-                            ))}
-                            
-                            {profile?.links.length === 0 && (
-                              <div className={`text-center py-8 ${profile?.backgroundImage ? 'text-white/80' : (themes.find(t => t.id === profile?.theme)?.textColor || 'text-white') + ' opacity-80'}`}>
-                                <p>Add some links to see them here</p>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <PreviewCard 
+                    profile={profile}
+                    profileForm={profileForm}
+                    renderSocialIcons={renderSocialIcons}
+                    themes={themes}
+                  />
                 </div>
               </div>
             </div>
@@ -776,71 +895,12 @@ const Dashboard = () => {
               
               <div>
                 <div className="sticky top-8">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Preview</CardTitle>
-                      <CardDescription>
-                        See how your social icons look
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="border border-gray-200 rounded-lg h-[500px] overflow-hidden">
-                        <div 
-                          className="h-full w-full p-8 flex flex-col items-center overflow-y-auto"
-                          style={profile?.backgroundImage ? {
-                            backgroundImage: `url(${profile.backgroundImage})`,
-                            backgroundSize: 'cover',
-                            backgroundPosition: 'center',
-                          } : {
-                            background: themes.find(t => t.id === profile?.theme)?.background || themes[0].background
-                          }}
-                        >
-                          <div className="w-20 h-20 rounded-full overflow-hidden mb-4 bg-white/20">
-                            <img 
-                              src={profile?.avatar} 
-                              alt={profile?.displayName || 'Avatar'} 
-                              className="w-full h-full object-cover" 
-                            />
-                          </div>
-                          <h3 
-                            className={`text-xl font-semibold mb-1 ${profile?.backgroundImage ? 'text-white' : themes.find(t => t.id === profile?.theme)?.textColor || 'text-white'}`}
-                            style={{ 
-                              fontFamily: profile?.fontFamily || 'Inter',
-                              color: profile?.fontColor || undefined
-                            }}
-                          >
-                            {profile?.displayName || 'Your Name'}
-                          </h3>
-                          <p 
-                            className={`text-sm mb-6 text-center ${profile?.backgroundImage ? 'text-white/80' : (themes.find(t => t.id === profile?.theme)?.textColor || 'text-white') + ' opacity-80'}`}
-                            style={{ 
-                              fontFamily: profile?.fontFamily || 'Inter',
-                              color: profile?.fontColor ? profile?.fontColor + '99' : undefined
-                            }}
-                          >
-                            {profile?.bio || 'Your bio goes here'}
-                          </p>
-                          
-                          {profile?.showSocialIcons && (
-                            <div className="flex flex-wrap justify-center gap-3 mb-6">
-                              {profile?.links.filter(link => link.display_type === 'icon').map((link, index) => (
-                                <div 
-                                  key={index}
-                                  className="w-10 h-10 rounded-full flex items-center justify-center"
-                                  style={{
-                                    backgroundColor: link.backgroundColor || '#f3f4f6',
-                                    color: link.textColor || '#000000'
-                                  }}
-                                >
-                                  <span className="text-xs">🔗</span>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <PreviewCard 
+                    profile={profile}
+                    profileForm={profileForm}
+                    renderSocialIcons={renderSocialIcons}
+                    themes={themes}
+                  />
                 </div>
               </div>
             </div>
@@ -873,96 +933,12 @@ const Dashboard = () => {
               </div>
               
               <div className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Preview</CardTitle>
-                    <CardDescription>
-                      See how your page will look
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="border rounded-lg overflow-hidden">
-                      <div className={`pt-6 px-4 ${profile?.backgroundImage ? 'bg-gradient-to-b from-purple-600 to-blue-600' : themes.find(t => t.id === profile?.theme)?.background || 'bg-gray-100'}`}>
-                        <div className="mx-auto max-w-sm flex flex-col items-center">
-                          {profile?.avatar && (
-                            <div className="w-20 h-20 rounded-full overflow-hidden mb-4 border-2 border-white">
-                              <img
-                                src={profile.avatar}
-                                alt={profile.displayName}
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
-                          )}
-                          
-                          <h3 className={`text-xl font-bold ${profile?.backgroundImage ? 'text-white' : themes.find(t => t.id === profile?.theme)?.textColor || 'text-gray-900'}`}>
-                            {profile?.displayName || 'Your Name'}
-                          </h3>
-                          
-                          <p className={`text-center text-sm mb-4 ${profile?.backgroundImage ? 'text-white/80' : (themes.find(t => t.id === profile?.theme)?.textColor || 'text-gray-900') + ' opacity-80'}`}>
-                            {profile?.bio || 'Your bio goes here...'}
-                          </p>
-                          
-                          {/* Images preview */}
-                          {profile?.images && profile.images.length > 0 && (
-                            <div className="w-full mb-4 overflow-hidden rounded-lg">
-                              {profile.useInfiniteSlider ? (
-                                <InfiniteSlider duration={30} gap={8} className="w-full">
-                                  {profile.images.map((image) => (
-                                    <div key={image.id} className="flex-shrink-0 w-32 h-24 rounded-lg overflow-hidden">
-                                      <img 
-                                        src={image.url}
-                                        alt={image.alt}
-                                        className="w-full h-full object-cover"
-                                      />
-                                    </div>
-                                  ))}
-                                </InfiniteSlider>
-                              ) : profile.imageLayout === 'row' ? (
-                                <div className="overflow-x-auto py-2">
-                                  <div className="flex gap-2">
-                                    {profile.images.map((image) => (
-                                      <div key={image.id} className="flex-shrink-0 w-32 h-24 rounded-lg overflow-hidden">
-                                        <img 
-                                          src={image.url}
-                                          alt={image.alt}
-                                          className="w-full h-full object-cover"
-                                        />
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              ) : profile.imageLayout === 'column' ? (
-                                <div className="flex flex-col gap-2 max-h-[200px] overflow-y-auto">
-                                  {profile.images.map((image) => (
-                                    <div key={image.id} className="w-full h-24 rounded-lg overflow-hidden">
-                                      <img 
-                                        src={image.url}
-                                        alt={image.alt}
-                                        className="w-full h-full object-cover"
-                                      />
-                                    </div>
-                                  ))}
-                                </div>
-                              ) : (
-                                <div className={`grid grid-cols-${profile.gridColumns || 2} gap-2`}>
-                                  {profile.images.map((image) => (
-                                    <div key={image.id} className="aspect-video rounded-lg overflow-hidden">
-                                      <img 
-                                        src={image.url}
-                                        alt={image.alt}
-                                        className="w-full h-full object-cover"
-                                      />
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                <PreviewCard 
+                  profile={profile}
+                  profileForm={profileForm}
+                  renderSocialIcons={renderSocialIcons}
+                  themes={themes}
+                />
               </div>
             </div>
           </TabsContent>
@@ -1042,79 +1018,12 @@ const Dashboard = () => {
               
               <div>
                 <div className="sticky top-8">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Preview</CardTitle>
-                      <CardDescription>
-                        See how your page looks
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="border border-gray-200 rounded-lg h-[500px] overflow-hidden">
-                        <div 
-                          className="h-full w-full p-8 flex flex-col items-center overflow-y-auto"
-                          style={profile?.backgroundImage ? {
-                            backgroundImage: `url(${profile.backgroundImage})`,
-                            backgroundSize: 'cover',
-                            backgroundPosition: 'center',
-                          } : {
-                            background: themes.find(t => t.id === profile?.theme)?.background || themes[0].background
-                          }}
-                        >
-                          <div className="w-20 h-20 rounded-full overflow-hidden mb-4 bg-white/20">
-                            <img 
-                              src={profile?.avatar} 
-                              alt={profileForm.displayName || 'Avatar'} 
-                              className="w-full h-full object-cover" 
-                            />
-                          </div>
-                          <h3 
-                            className={`text-xl font-semibold mb-1 ${profile?.backgroundImage ? 'text-white' : themes.find(t => t.id === profile?.theme)?.textColor || 'text-white'}`}
-                            style={{ 
-                              fontFamily: profile?.fontFamily || 'Inter',
-                              color: profile?.fontColor || undefined
-                            }}
-                          >
-                            {profileForm.displayName || 'Your Name'}
-                          </h3>
-                          <p 
-                            className={`text-sm mb-6 text-center ${profile?.backgroundImage ? 'text-white/80' : (themes.find(t => t.id === profile?.theme)?.textColor || 'text-white') + ' opacity-80'}`}
-                            style={{ 
-                              fontFamily: profile?.fontFamily || 'Inter',
-                              color: profile?.fontColor ? profile?.fontColor + '99' : undefined
-                            }}
-                          >
-                            {profileForm.bio || 'Your bio goes here'}
-                          </p>
-                          
-                          {profile?.showSocialIcons && renderSocialIcons()}
-                          
-                          <div className="w-full max-w-sm space-y-3">
-                            {profile?.links.filter(l => !profile.showSocialIcons || l.display_type !== 'icon').map((link) => (
-                              <div 
-                                key={link.id}
-                                className={`w-full py-3 px-5 rounded-lg flex items-center justify-center gap-2 font-medium ${profile?.backgroundImage ? 'bg-white/20 backdrop-blur-sm text-white' : themes.find(t => t.id === profile?.theme)?.buttonStyle || 'bg-white text-gray-800'}`}
-                                style={{
-                                  backgroundColor: link.backgroundColor,
-                                  color: link.textColor,
-                                  borderRadius: link.borderRadius,
-                                  fontFamily: profile?.fontFamily || 'Inter',
-                                }}
-                              >
-                                {link.title}
-                              </div>
-                            ))}
-                            
-                            {profile?.links.length === 0 && (
-                              <div className={`text-center py-8 ${profile?.backgroundImage ? 'text-white/80' : (themes.find(t => t.id === profile?.theme)?.textColor || 'text-white') + ' opacity-80'}`}>
-                                <p>Add some links to see them here</p>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <PreviewCard 
+                    profile={profile}
+                    profileForm={profileForm}
+                    renderSocialIcons={renderSocialIcons}
+                    themes={themes}
+                  />
                 </div>
               </div>
             </div>
@@ -1214,59 +1123,12 @@ const Dashboard = () => {
               
               <div>
                 <div className="sticky top-8">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Preview</CardTitle>
-                      <CardDescription>
-                        See how your profile looks
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="border border-gray-200 rounded-lg h-[500px] overflow-hidden">
-                        <div 
-                          className="h-full w-full p-8 flex flex-col items-center overflow-y-auto"
-                          style={profile?.backgroundImage ? {
-                            backgroundImage: `url(${profile.backgroundImage})`,
-                            backgroundSize: 'cover',
-                            backgroundPosition: 'center',
-                          } : {
-                            background: themes.find(t => t.id === profile?.theme)?.background || themes[0].background
-                          }}
-                        >
-                          <div className="w-20 h-20 rounded-full overflow-hidden mb-4 bg-white/20">
-                            <img 
-                              src={profile?.avatar} 
-                              alt={profileForm.displayName || 'Avatar'} 
-                              className="w-full h-full object-cover" 
-                            />
-                          </div>
-                          <h3 className={`text-xl font-semibold mb-1 ${profile?.backgroundImage ? 'text-white' : themes.find(t => t.id === profile?.theme)?.textColor || 'text-white'}`}>
-                            {profileForm.displayName || 'Your Name'}
-                          </h3>
-                          <p className={`text-sm mb-6 text-center ${profile?.backgroundImage ? 'text-white/80' : (themes.find(t => t.id === profile?.theme)?.textColor || 'text-white') + ' opacity-80'}`}>
-                            {profileForm.bio || 'Your bio goes here'}
-                          </p>
-                          
-                          <div className="w-full max-w-sm space-y-3">
-                            {profile?.links.map((link) => (
-                              <div 
-                                key={link.id}
-                                className={`w-full py-3 px-5 rounded-lg flex items-center justify-center gap-2 font-medium ${profile?.backgroundImage ? 'bg-white/20 backdrop-blur-sm text-white' : themes.find(t => t.id === profile?.theme)?.buttonStyle || 'bg-white text-gray-800'}`}
-                              >
-                                {link.title}
-                              </div>
-                            ))}
-                            
-                            {profile?.links.length === 0 && (
-                              <div className={`text-center py-8 ${profile?.backgroundImage ? 'text-white/80' : (themes.find(t => t.id === profile?.theme)?.textColor || 'text-white') + ' opacity-80'}`}>
-                                <p>Add some links to see them here</p>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <PreviewCard 
+                    profile={profile}
+                    profileForm={profileForm}
+                    renderSocialIcons={renderSocialIcons}
+                    themes={themes}
+                  />
                 </div>
               </div>
             </div>

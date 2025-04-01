@@ -94,14 +94,45 @@ const getVideoEmbedUrl = (url: string) => {
   return url;
 };
 
+// Function to generate shadow value based on shadow type and color
+const getShadowValue = (shadowType: string | undefined, shadowColor: string | undefined) => {
+  const color = shadowColor || 'rgba(0, 0, 0, 0.1)';
+  
+  if (!shadowType || shadowType === 'none') {
+    return 'none';
+  }
+  
+  // If the shadowType is already a complete shadow value, return it
+  if (shadowType.includes('px') || shadowType.includes('rem')) {
+    return shadowType;
+  }
+  
+  // Otherwise, generate shadow based on type
+  switch(shadowType) {
+    case 'Subtle':
+      return `0 1px 2px ${color}`;
+    case 'Small':
+      return `0 1px 3px ${color}, 0 1px 2px ${color}`;
+    case 'Medium':
+      return `0 4px 6px -1px ${color}, 0 2px 4px -1px ${color}`;
+    case 'Large':
+      return `0 10px 15px -3px ${color}, 0 4px 6px -2px ${color}`;
+    case 'Extra Large':
+      return `0 20px 25px -5px ${color}, 0 10px 10px -5px ${color}`;
+    default:
+      return shadowType;
+  }
+};
+
 const LinkItem = ({ link, className = '', icon }: LinkItemProps) => {
   const socialIcon = getSocialIcon(link.icon);
-  
+  console.log("linkCHEN",link)
   // Use custom styles if available
   const customStyle = {
     backgroundColor: link.backgroundColor || undefined,
     color: link.textColor || undefined,
     borderRadius: link.borderRadius || undefined,
+    boxShadow: getShadowValue(link.shadow, link.shadowColor),
   };
   
   // If it's a video type, render the embedded video

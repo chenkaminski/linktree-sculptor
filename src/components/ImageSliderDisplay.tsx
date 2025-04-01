@@ -71,7 +71,11 @@ const ImageSliderDisplay = ({
       )}
 
       {imageLayout === 'grid' && (
-        <div className={`grid grid-cols-1 sm:grid-cols-${gridColumns} gap-4`}>
+        <div className={`grid grid-cols-1 gap-4 ${
+          gridColumns === 2 ? 'sm:grid-cols-2' :
+          gridColumns === 3 ? 'sm:grid-cols-3' :
+          gridColumns === 4 ? 'sm:grid-cols-4' : 'sm:grid-cols-2'
+        }`}>
           {images.map((image) => (
             <div key={image.id} className="aspect-video rounded-lg overflow-hidden">
               <img 

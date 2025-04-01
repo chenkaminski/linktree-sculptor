@@ -11,6 +11,8 @@ export interface Link {
   backgroundColor?: string;
   textColor?: string;
   borderRadius?: string;
+  shadow?: string;
+  shadowColor?: string;
   display_type?: 'button' | 'icon' | 'video' | string;
 }
 
@@ -90,6 +92,8 @@ console.log("imagesError",imagesError)
         backgroundColor: link.background_color,
         textColor: link.text_color,
         borderRadius: link.border_radius,
+        shadow: link.shadow,
+        shadowColor: link.shadow_color,
         display_type: link.display_type
       })) || [],
       theme: profile.theme || 'default',
@@ -163,6 +167,8 @@ export const getProfileByUsername = async (username: string): Promise<UserProfil
         backgroundColor: link.background_color,
         textColor: link.text_color,
         borderRadius: link.border_radius,
+        shadow: link.shadow,
+        shadowColor: link.shadow_color,
         display_type: link.display_type
       })) || [],
       theme: profile.theme || 'default',
@@ -298,6 +304,8 @@ export const updateLink = async (userId: string, linkId: string, linkData: Parti
     if (linkData.backgroundColor !== undefined) updateData.background_color = linkData.backgroundColor;
     if (linkData.textColor !== undefined) updateData.text_color = linkData.textColor;
     if (linkData.borderRadius !== undefined) updateData.border_radius = linkData.borderRadius;
+    if (linkData.shadow !== undefined) updateData.shadow = linkData.shadow;
+    if (linkData.shadowColor !== undefined) updateData.shadow_color = linkData.shadowColor;
     if (linkData.display_type !== undefined) updateData.display_type = linkData.display_type;
 
     const { data, error } = await supabase
@@ -313,10 +321,10 @@ export const updateLink = async (userId: string, linkId: string, linkData: Parti
       throw error;
     }
   
-  toast({
-    title: 'Link updated',
-    description: 'Your link has been updated successfully',
-  });
+    toast({
+      title: 'Link updated',
+      description: 'Your link has been updated successfully',
+    });
   
     return {
       id: data.id,
@@ -327,6 +335,8 @@ export const updateLink = async (userId: string, linkId: string, linkData: Parti
       backgroundColor: data.background_color,
       textColor: data.text_color,
       borderRadius: data.border_radius,
+      shadow: data.shadow,
+      shadowColor: data.shadow_color,
       display_type: data.display_type as 'button' | 'icon' | 'video',
     };
   } catch (error) {

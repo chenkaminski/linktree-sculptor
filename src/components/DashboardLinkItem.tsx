@@ -41,6 +41,7 @@ const DashboardLinkItem = ({
     backgroundColor: link.backgroundColor || '#f3f4f6',
     color: link.textColor || '#000000',
     borderRadius: link.borderRadius || '0.5rem',
+    boxShadow: link.shadow || 'none',
   };
 
   if (isEditing) {
