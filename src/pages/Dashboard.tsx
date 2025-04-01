@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LogOut, LinkIcon, User, Settings, Share2, Palette, Image as ImageIcon, Facebook, Twitter, Instagram, Linkedin, Github, Youtube, Mail, Globe, Twitch, Dribbble, Figma, Slack } from 'lucide-react';
+import { LogOut, LinkIcon, User, Settings, Share2, Palette, Image as ImageIcon, Facebook, Twitter, Instagram, Linkedin, Github, Youtube, Mail, Globe, Twitch, Dribbble, Figma, Slack, Copy, QrCode } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import LinkForm from '@/components/LinkForm';
@@ -23,6 +23,15 @@ import { CSS } from '@dnd-kit/utilities';
 import { Switch } from '@/components/ui/switch';
 import ImageSlider from '@/components/ImageSlider';
 import { InfiniteSlider } from '@/components/ui/infinite-slider';
+import QRCodeCanvas from '@/components/QRCodeCanvas';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 const SortableLinkItem = ({ link, onEdit, onDelete, onStyleUpdate }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: link.id });
@@ -208,6 +217,8 @@ const Dashboard = () => {
   });
   
   const [addingLink, setAddingLink] = useState(false);
+  const [isQrDialogOpen, setIsQrDialogOpen] = useState(false);
+  const [profileUrl, setProfileUrl] = useState('');
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -227,6 +238,7 @@ const Dashboard = () => {
             bio: profile.bio,
             username: profile.username,
           });
+          setProfileUrl(`${window.location.origin}/u/${profile.username}`);
         } catch (error) {
           console.error('Error fetching profile:', error);
         } finally {
@@ -523,7 +535,6 @@ const Dashboard = () => {
     );
   };
 
-  // Helper function to get social icons
   const getSocialIcon = (iconName: string | undefined, size = 16) => {
     if (!iconName) return <LinkIcon size={size} />;
     
@@ -673,6 +684,15 @@ const Dashboard = () => {
         variant: 'destructive',
       });
     }
+  };
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(profileUrl).then(() => {
+      toast({
+        title: "Link copied to clipboard!",
+        description: "You can now paste it anywhere.",
+      });
+    });
   };
 
   if (loading) {
@@ -1067,6 +1087,72 @@ const Dashboard = () => {
                         onImageUploaded={handleLogoChange}
                       />
                     )}
+                  </CardContent>
+                </Card>
+                
+                <Card className="mb-6">
+                  <CardHeader>
+                    <CardTitle>Share Profile</CardTitle>
+                    <CardDescription>
+                      Share your profile with others or get a QR code
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-6">
+                      <div className="space-y-2">
+                        <Label htmlFor="profile-link">Profile Link</Label>
+                        <div className="flex">
+                          <Input
+                            id="profile-link"
+                            value={profileUrl}
+                            readOnly
+                            className="rounded-r-none"
+                          />
+                          <Button 
+                            className="rounded-l-none" 
+                            onClick={handleCopyLink}
+                          >
+                            <Copy size={16} className="mr-2" />
+                            Copy
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <Dialog open={isQrDialogOpen} onOpenChange={setIsQrDialogOpen}>
+                          <DialogTrigger asChild>
+                            <Button variant="outline">
+                              <QrCode size={16} className="mr-2" />
+                              QR Code
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Share via QR Code</DialogTitle>
+                              <DialogDescription>
+                                Scan this QR code to visit your profile
+                              </DialogDescription>
+                            </DialogHeader>
+                            <div className="flex justify-center p-4">
+                              <QRCodeCanvas
+                                value={profileUrl}
+                                size={250}
+                                bgColor="#ffffff"
+                                fgColor="#000000"
+                                level="L"
+                                includeMargin={false}
+                              />
+                            </div>
+                            <div className="flex justify-center">
+                              <Button onClick={handleCopyLink} className="flex items-center gap-2">
+                                <Copy className="h-4 w-4" />
+                                Copy Profile Link
+                              </Button>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
                 
