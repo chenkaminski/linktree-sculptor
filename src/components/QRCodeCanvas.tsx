@@ -1,13 +1,13 @@
 
 import React from 'react';
-import QRCode from 'qrcode.react';
+import { QRCodeSVG } from 'qrcode.react';
 
 interface QRCodeCanvasProps {
   value: string;
   size?: number;
   bgColor?: string;
   fgColor?: string;
-  level?: string;
+  level?: "L" | "M" | "Q" | "H";
   includeMargin?: boolean;
 }
 
@@ -20,14 +20,13 @@ const QRCodeCanvas: React.FC<QRCodeCanvasProps> = ({
   includeMargin = false,
 }) => {
   return (
-    <QRCode
+    <QRCodeSVG
       value={value}
       size={size}
       bgColor={bgColor}
       fgColor={fgColor}
-      level={level as "L" | "M" | "Q" | "H"}
+      level={level}
       includeMargin={includeMargin}
-      renderAs="canvas"
     />
   );
 };
