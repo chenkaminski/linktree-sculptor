@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,11 +31,11 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-indigo-100">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-indigo-100 px-4 py-8">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Reset Password</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-center text-2xl sm:text-3xl">Reset Password</CardTitle>
+          <CardDescription className="text-center">
             Enter your email address and we'll send you a link to reset your password
           </CardDescription>
         </CardHeader>
@@ -48,6 +49,7 @@ const ForgotPassword = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                className="w-full"
               />
             </div>
             {error && (
@@ -78,4 +80,4 @@ const ForgotPassword = () => {
   );
 };
 
-export default ForgotPassword; 
+export default ForgotPassword;
