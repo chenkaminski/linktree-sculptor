@@ -68,6 +68,26 @@ const getLinkStyle = (link: LinkType, fontFamily?: string) => {
 };
 
 const PreviewCard = ({ profile, profileForm, renderSocialIcons, themes, getLinkStyle }) => {
+  // Find the current theme
+  const currentTheme = themes.find(t => t.id === profile?.theme) ;
+  // console.log("currentTheme ,",currentTheme)
+  console.log("renderSocialIcons",  renderSocialIcons())
+  console.log("==================================================================")
+  // Add state variables to track changes
+  const [previewTheme, setPreviewTheme] = useState(currentTheme);
+  const [previewProfile, setPreviewProfile] = useState(profile);
+  const [previewFormData, setPreviewFormData] = useState(profileForm);
+  // Update state when props change
+  useEffect(() => {
+    setPreviewTheme(themes.find(t => t.id === profile?.theme) );
+    setPreviewProfile(profile);
+    setPreviewFormData(profileForm);
+    
+    // This forces a component re-render
+    console.log("Preview updating:", new Date().toISOString());
+  }, [profile, profileForm, themes, profile?.theme]);
+  // console.log("previewProfile?.backgroundImage",previewProfile?.backgroundImage)
+  console.log("previewTheme ,",previewTheme)
   return (
     <Card>
       <CardHeader>
@@ -79,60 +99,62 @@ const PreviewCard = ({ profile, profileForm, renderSocialIcons, themes, getLinkS
       <CardContent>
         <div className="border border-gray-200 rounded-lg h-[500px] overflow-hidden">
           <div 
-            className="h-full w-full p-8 flex flex-col items-center overflow-y-auto"
-            style={profile?.backgroundImage ? {
-              backgroundImage: `url(${profile.backgroundImage})`,
+            className={`h-full w-full p-8 flex flex-col items-center overflow-y-auto ${
+              previewProfile?.backgroundImage 
+                ? '' 
+                : previewTheme.background
+            }`}
+            style={previewProfile?.backgroundImage ? {
+              backgroundImage: `url(${previewProfile.backgroundImage})`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
-            } : {
-              background: themes.find(t => t.id === profile?.theme)?.background || themes[0].background
-            }}
+            } : undefined}
           >
             <div className="w-20 h-20 rounded-full overflow-hidden mb-4 bg-white/20">
               <img 
-                src={profile?.avatar} 
-                alt={(profileForm?.displayName || profile?.displayName) || 'Avatar'} 
+                src={previewProfile?.avatar} 
+                alt={(previewFormData?.displayName || previewProfile?.displayName) || 'Avatar'} 
                 className="w-full h-full object-cover" 
               />
             </div>
             <h3 
-              className={`text-xl font-semibold mb-1 ${profile?.backgroundImage ? 'text-white' : themes.find(t => t.id === profile?.theme)?.textColor || 'text-white'}`}
+              className={`text-xl font-semibold mb-1 ${previewProfile?.backgroundImage ? 'text-white' : previewTheme.textColor || 'text-white'}`}
               style={{ 
-                fontFamily: profile?.fontFamily || 'Inter',
-                color: profile?.fontColor || undefined
+                fontFamily: previewProfile?.fontFamily || 'Inter',
+                color: previewProfile?.fontColor || undefined
               }}
             >
-              {(profileForm?.displayName || profile?.displayName) || 'Your Name'}
+              {(previewFormData?.displayName || previewProfile?.displayName) || 'Your Name'}
             </h3>
             <p 
-              className={`text-sm mb-6 text-center ${profile?.backgroundImage ? 'text-white/80' : (themes.find(t => t.id === profile?.theme)?.textColor || 'text-white') + ' opacity-80'}`}
+              className={`text-sm mb-6 text-center ${previewProfile?.backgroundImage ? 'text-white/80' : (previewTheme.textColor || 'text-white') + ' opacity-80'}`}
               style={{ 
-                fontFamily: profile?.fontFamily || 'Inter',
-                color: profile?.fontColor ? profile?.fontColor + '99' : undefined
+                fontFamily: previewProfile?.fontFamily || 'Inter',
+                color: previewProfile?.fontColor ? previewProfile?.fontColor + '99' : undefined
               }}
             >
-              {(profileForm?.bio || profile?.bio) || 'Your bio goes here'}
+              {(previewFormData?.bio || previewProfile?.bio) || 'Your bio goes here'}
             </p>
             
-            {profile?.showSocialIcons && renderSocialIcons()}
+            {previewProfile?.showSocialIcons && renderSocialIcons()}
             
             <div className="w-full max-w-sm space-y-3">
-              {profile?.links.filter(l => !profile.showSocialIcons || l.display_type !== 'icon').map((link) => (
+              {previewProfile?.links.filter(l => !previewProfile.showSocialIcons || l.display_type !== 'icon').map((link) => (
                 <div 
                   key={link.id}
-                  className={`w-full py-3 px-5 rounded-lg flex items-center justify-center gap-2 font-medium ${profile?.backgroundImage ? 'bg-white/20 backdrop-blur-sm text-white' : themes.find(t => t.id === profile?.theme)?.buttonStyle || 'bg-white text-gray-800'}`}
-                  style={getLinkStyle(link, profile?.fontFamily)}
+                  className={`w-full py-3 px-5 rounded-lg flex items-center justify-center gap-2 font-medium ${previewProfile?.backgroundImage ? 'bg-white/20 backdrop-blur-sm text-white' : previewTheme.buttonStyle || 'bg-white text-gray-800'}`}
+                  style={getLinkStyle(link, previewProfile?.fontFamily)}
                 >
                   {link.title}
                 </div>
               ))}
               
               {/* Display images preview */}
-              {profile?.images && profile.images.length > 0 && (
+              {previewProfile?.images && previewProfile.images.length > 0 && (
                 <div className="w-full mt-4 mb-6 overflow-hidden rounded-lg">
-                  {profile.useInfiniteSlider ? (
+                  {previewProfile.useInfiniteSlider ? (
                     <InfiniteSlider duration={30} gap={8} className="w-full">
-                      {profile.images.map((image) => (
+                      {previewProfile.images.map((image) => (
                         <div key={image.id} className="flex-shrink-0 w-32 h-24 rounded-lg overflow-hidden">
                           <img 
                             src={image.url}
@@ -142,10 +164,10 @@ const PreviewCard = ({ profile, profileForm, renderSocialIcons, themes, getLinkS
                         </div>
                       ))}
                     </InfiniteSlider>
-                  ) : profile.imageLayout === 'row' ? (
+                  ) : previewProfile.imageLayout === 'row' ? (
                     <div className="overflow-x-auto py-2">
                       <div className="flex gap-2">
-                        {profile.images.map((image) => (
+                        {previewProfile.images.map((image) => (
                           <div key={image.id} className="flex-shrink-0 w-32 h-24 rounded-lg overflow-hidden">
                             <img 
                               src={image.url}
@@ -156,9 +178,9 @@ const PreviewCard = ({ profile, profileForm, renderSocialIcons, themes, getLinkS
                         ))}
                       </div>
                     </div>
-                  ) : profile.imageLayout === 'column' ? (
+                  ) : previewProfile.imageLayout === 'column' ? (
                     <div className="flex flex-col gap-2 max-h-[200px] overflow-y-auto">
-                      {profile.images.map((image) => (
+                      {previewProfile.images.map((image) => (
                         <div key={image.id} className="w-full h-24 rounded-lg overflow-hidden">
                           <img 
                             src={image.url}
@@ -170,11 +192,11 @@ const PreviewCard = ({ profile, profileForm, renderSocialIcons, themes, getLinkS
                     </div>
                   ) : (
                     <div className={`grid gap-2 ${
-                      profile.gridColumns === 2 ? 'grid-cols-2' :
-                      profile.gridColumns === 3 ? 'grid-cols-3' :
-                      profile.gridColumns === 4 ? 'grid-cols-4' : 'grid-cols-2'
+                      previewProfile.gridColumns === 2 ? 'grid-cols-2' :
+                      previewProfile.gridColumns === 3 ? 'grid-cols-3' :
+                      previewProfile.gridColumns === 4 ? 'grid-cols-4' : 'grid-cols-2'
                     }`}>
-                      {profile.images.map((image) => (
+                      {previewProfile.images.map((image) => (
                         <div key={image.id} className="aspect-video rounded-lg overflow-hidden">
                           <img 
                             src={image.url}
@@ -188,19 +210,19 @@ const PreviewCard = ({ profile, profileForm, renderSocialIcons, themes, getLinkS
                 </div>
               )}
               
-              {profile?.links.length === 0 && profile?.images?.length === 0 && (
-                <div className={`text-center py-8 ${profile?.backgroundImage ? 'text-white/80' : (themes.find(t => t.id === profile?.theme)?.textColor || 'text-white') + ' opacity-80'}`}>
+              {previewProfile?.links.length === 0 && previewProfile?.images?.length === 0 && (
+                <div className={`text-center py-8 ${previewProfile?.backgroundImage ? 'text-white/80' : (previewTheme.textColor || 'text-white') + ' opacity-80'}`}>
                   <p>Add some links or images to see them here</p>
                 </div>
               )}
             </div>
             
             {/* Logo at the bottom */}
-            {profile?.logo && (
+            {previewProfile?.logo && (
               <div className="mt-auto pt-6 mb-4 flex justify-center">
                 <img 
-                  src={profile.logo}
-                  alt={`${profile.displayName} logo`}
+                  src={previewProfile.logo}
+                  alt={`${previewProfile.displayName} logo`}
                   className="max-h-12 max-w-[180px] object-contain"
                 />
               </div>
@@ -374,13 +396,45 @@ const Dashboard = () => {
   const handleThemeChange = async (themeId: string) => {
     if (!user || !profile) return;
     
+    // Immediately update the UI for a responsive experience
+    setProfile(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        theme: themeId,
+      };
+    });
+    
     try {
+      // Then update the server
       const updatedProfile = await updateProfile(user.id, {
         theme: themeId,
       });
+      
+      // Update with the server response to ensure consistency
       setProfile(updatedProfile);
+      
+      toast({
+        title: 'Theme updated',
+        description: 'Your theme has been updated successfully',
+      });
     } catch (error) {
       console.error('Error updating theme:', error);
+      
+      // Revert to the original theme if the server update fails
+      setProfile(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          theme: profile.theme,
+        };
+      });
+      
+      toast({
+        title: 'Error',
+        description: 'Failed to update theme. Please try again.',
+        variant: 'destructive',
+      });
     }
   };
   
@@ -529,8 +583,8 @@ const Dashboard = () => {
             key={link.id}
             className="w-10 h-10 rounded-full flex items-center justify-center transition-transform hover:scale-110"
             style={{
-              backgroundColor: link.backgroundColor || '#f3f4f6',
-              color: link.textColor || '#000000'
+              backgroundColor: link.background_color || '#f3f4f6',
+              color: link.text_color || '#000000'
             }}
             title={link.title}
           >
@@ -821,6 +875,7 @@ const Dashboard = () => {
               <div>
                 <div className="sticky top-8">
                   <PreviewCard 
+                    key={`preview-${profile?.theme}-${JSON.stringify(profileForm)}`}
                     profile={profile}
                     profileForm={profileForm}
                     renderSocialIcons={renderSocialIcons}
@@ -897,6 +952,7 @@ const Dashboard = () => {
               <div>
                 <div className="sticky top-8">
                   <PreviewCard 
+                    key={`preview-${profile?.theme}-${JSON.stringify(profileForm)}`}
                     profile={profile}
                     profileForm={profileForm}
                     renderSocialIcons={renderSocialIcons}
@@ -936,6 +992,7 @@ const Dashboard = () => {
               
               <div className="space-y-6">
                 <PreviewCard 
+                  key={`preview-${profile?.theme}-${JSON.stringify(profileForm)}`}
                   profile={profile}
                   profileForm={profileForm}
                   renderSocialIcons={renderSocialIcons}
@@ -1022,6 +1079,7 @@ const Dashboard = () => {
               <div>
                 <div className="sticky top-8">
                   <PreviewCard 
+                    key={`preview-${profile?.theme}-${JSON.stringify(profileForm)}`}
                     profile={profile}
                     profileForm={profileForm}
                     renderSocialIcons={renderSocialIcons}
@@ -1194,6 +1252,7 @@ const Dashboard = () => {
               <div>
                 <div className="sticky top-8">
                   <PreviewCard 
+                    key={`preview-${profile?.theme}-${JSON.stringify(profileForm)}`}
                     profile={profile}
                     profileForm={profileForm}
                     renderSocialIcons={renderSocialIcons}

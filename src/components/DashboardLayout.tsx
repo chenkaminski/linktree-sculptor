@@ -49,7 +49,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           </Link>
           
           <div className="flex items-center gap-6">
-            {username && (
+          {username && (
               <Link 
                 to={`/u/${username}`} 
                 className="text-sm text-gray-600 hover:text-purple-600 flex items-center gap-1"
@@ -64,6 +64,11 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
               <Link to="/billing" className="text-sm text-gray-600 hover:text-purple-600 flex items-center gap-1">
                 <CreditCard size={16} className="mr-1" />
                 Billing
+              </Link>
+            )}
+            {location.pathname !== '/dashboard' && (
+              <Link to="/dashboard" className="text-sm text-gray-600 hover:text-purple-600 flex items-center gap-1">
+                Dashboard
               </Link>
             )}
             <Button variant="ghost" size="sm" onClick={handleSignOut}>

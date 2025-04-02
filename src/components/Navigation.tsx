@@ -36,7 +36,7 @@ const Navigation = () => {
       <div className="flex items-center">
         <Link to="/">
           <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-indigo-600">
-            LinkTree Clone
+          myyway
           </h1>
         </Link>
       </div>
