@@ -70,7 +70,6 @@ const getLinkStyle = (link: LinkType, fontFamily?: string) => {
 const PreviewCard = ({ profile, profileForm, renderSocialIcons, themes, getLinkStyle }) => {
   // Find the current theme
   const currentTheme = themes.find(t => t.id === profile?.theme) ;
-  // console.log("currentTheme ,",currentTheme)
   console.log("renderSocialIcons",  renderSocialIcons())
   console.log("==================================================================")
   // Add state variables to track changes
@@ -86,18 +85,19 @@ const PreviewCard = ({ profile, profileForm, renderSocialIcons, themes, getLinkS
     // This forces a component re-render
     console.log("Preview updating:", new Date().toISOString());
   }, [profile, profileForm, themes, profile?.theme]);
-  // console.log("previewProfile?.backgroundImage",previewProfile?.backgroundImage)
   console.log("previewTheme ,",previewTheme)
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Preview</CardTitle>
-        <CardDescription>
-          See how your page looks
-        </CardDescription>
+    <Card className="mb-8">
+      <CardHeader className="md:flex md:items-center">
+        <div>
+          <CardTitle>Preview</CardTitle>
+          <CardDescription>
+            See how your page looks
+          </CardDescription>
+        </div>
       </CardHeader>
       <CardContent>
-        <div className="border border-gray-200 rounded-lg h-[500px] overflow-hidden">
+        <div className="border border-gray-200 rounded-lg h-[400px] overflow-hidden">
           <div 
             className={`h-full w-full p-8 flex flex-col items-center overflow-y-auto ${
               previewProfile?.backgroundImage 
@@ -770,32 +770,32 @@ const Dashboard = () => {
     <DashboardLayout>
       <div className="container mx-auto px-4 py-8">
         <Tabs defaultValue="links">
-          <TabsList className="mb-8">
-            <TabsTrigger value="links">
+          <TabsList className="flex flex-wrap w-full mb-8 overflow-x-auto">
+            <TabsTrigger value="links" className="flex-1 min-w-[80px]">
               <LinkIcon size={16} className="mr-2" />
               Links
             </TabsTrigger>
-            <TabsTrigger value="social">
+            <TabsTrigger value="social" className="flex-1 min-w-[80px]">
               <Share2 size={16} className="mr-2" />
-              Social Icons
+              Social
             </TabsTrigger>
-            <TabsTrigger value="images">
+            <TabsTrigger value="images" className="flex-1 min-w-[80px]">
               <ImageIcon size={16} className="mr-2" />
               Images
             </TabsTrigger>
-            <TabsTrigger value="appearance">
+            <TabsTrigger value="appearance" className="flex-1 min-w-[80px]">
               <Palette size={16} className="mr-2" />
               Appearance
             </TabsTrigger>
-            <TabsTrigger value="profile">
+            <TabsTrigger value="profile" className="flex-1 min-w-[80px]">
               <User size={16} className="mr-2" />
               Profile
             </TabsTrigger>
           </TabsList>
           
           <TabsContent value="links" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="md:col-span-2 space-y-6">
+            <div className="grid grid-cols-1 gap-8">
+              <div className="space-y-6">
                 <Card>
                   <CardHeader>
                     <CardTitle>Manage Links</CardTitle>
@@ -824,28 +824,18 @@ const Dashboard = () => {
                           items={profile.links.map(link => link.id)}
                           strategy={verticalListSortingStrategy}
                         >
-                          {/* {profile.links.map((link) => (
-                            <SortableLinkItem
-                              key={link.id}
-                              link={link}
-                              onEdit={handleEditLink}
-                              onDelete={handleDeleteLink}
-                              onStyleUpdate={handleStyleUpdateLink}
-                            />
-                          ))} */}
-
-{profile.links
-  .filter(link => link.display_type === 'button')
-  .map((link) => (
-    <SortableLinkItem
-      key={link.id}
-      link={link}
-      onEdit={handleEditLink}
-      onDelete={handleDeleteLink}
-      onStyleUpdate={handleStyleUpdateLink}
-    />
-  ))
-}
+                          {profile.links
+                            .filter(link => link.display_type === 'button')
+                            .map((link) => (
+                              <SortableLinkItem
+                                key={link.id}
+                                link={link}
+                                onEdit={handleEditLink}
+                                onDelete={handleDeleteLink}
+                                onStyleUpdate={handleStyleUpdateLink}
+                              />
+                            ))
+                          }
                         </SortableContext>
                       </DndContext>
                     )}
@@ -872,24 +862,22 @@ const Dashboard = () => {
                 </Card>
               </div>
               
-              <div>
-                <div className="sticky top-8">
-                  <PreviewCard 
-                    key={`preview-${profile?.theme}-${JSON.stringify(profileForm)}`}
-                    profile={profile}
-                    profileForm={profileForm}
-                    renderSocialIcons={renderSocialIcons}
-                    themes={themes}
-                    getLinkStyle={getLinkStyle}
-                  />
-                </div>
+              <div className="md:sticky md:top-8">
+                <PreviewCard 
+                  key={`preview-${profile?.theme}-${JSON.stringify(profileForm)}`}
+                  profile={profile}
+                  profileForm={profileForm}
+                  renderSocialIcons={renderSocialIcons}
+                  themes={themes}
+                  getLinkStyle={getLinkStyle}
+                />
               </div>
             </div>
           </TabsContent>
           
           <TabsContent value="social" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="md:col-span-2 space-y-6">
+            <div className="grid grid-cols-1 gap-8">
+              <div className="space-y-6">
                 <Card>
                   <CardHeader>
                     <CardTitle>Social Icons</CardTitle>
@@ -949,24 +937,22 @@ const Dashboard = () => {
                 </Card>
               </div>
               
-              <div>
-                <div className="sticky top-8">
-                  <PreviewCard 
-                    key={`preview-${profile?.theme}-${JSON.stringify(profileForm)}`}
-                    profile={profile}
-                    profileForm={profileForm}
-                    renderSocialIcons={renderSocialIcons}
-                    themes={themes}
-                    getLinkStyle={getLinkStyle}
-                  />
-                </div>
+              <div className="md:sticky md:top-8">
+                <PreviewCard 
+                  key={`preview-${profile?.theme}-${JSON.stringify(profileForm)}`}
+                  profile={profile}
+                  profileForm={profileForm}
+                  renderSocialIcons={renderSocialIcons}
+                  themes={themes}
+                  getLinkStyle={getLinkStyle}
+                />
               </div>
             </div>
           </TabsContent>
           
           <TabsContent value="images" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="md:col-span-2 space-y-6">
+            <div className="grid grid-cols-1 gap-8">
+              <div className="space-y-6">
                 <Card>
                   <CardHeader>
                     <CardTitle>Image Slider</CardTitle>
@@ -990,7 +976,7 @@ const Dashboard = () => {
                 </Card>
               </div>
               
-              <div className="space-y-6">
+              <div className="md:sticky md:top-8">
                 <PreviewCard 
                   key={`preview-${profile?.theme}-${JSON.stringify(profileForm)}`}
                   profile={profile}
@@ -1004,8 +990,8 @@ const Dashboard = () => {
           </TabsContent>
           
           <TabsContent value="appearance">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="md:col-span-2">
+            <div className="grid grid-cols-1 gap-8">
+              <div>
                 <Card className="mb-6">
                   <CardHeader>
                     <CardTitle>Typography & Layout</CardTitle>
@@ -1053,7 +1039,7 @@ const Dashboard = () => {
                     <div className="space-y-6">
                       <div>
                         <h3 className="text-lg font-medium mb-4">Choose a theme</h3>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-2 gap-4">
                           {themes.map((theme) => (
                             <div 
                               key={theme.id}
@@ -1076,24 +1062,22 @@ const Dashboard = () => {
                 </Card>
               </div>
               
-              <div>
-                <div className="sticky top-8">
-                  <PreviewCard 
-                    key={`preview-${profile?.theme}-${JSON.stringify(profileForm)}`}
-                    profile={profile}
-                    profileForm={profileForm}
-                    renderSocialIcons={renderSocialIcons}
-                    themes={themes}
-                    getLinkStyle={getLinkStyle}
-                  />
-                </div>
+              <div className="md:sticky md:top-8">
+                <PreviewCard 
+                  key={`preview-${profile?.theme}-${JSON.stringify(profileForm)}`}
+                  profile={profile}
+                  profileForm={profileForm}
+                  renderSocialIcons={renderSocialIcons}
+                  themes={themes}
+                  getLinkStyle={getLinkStyle}
+                />
               </div>
             </div>
           </TabsContent>
           
           <TabsContent value="profile">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="md:col-span-2">
+            <div className="grid grid-cols-1 gap-8">
+              <div>
                 <Card className="mb-6">
                   <CardHeader>
                     <CardTitle>Profile Avatar</CardTitle>
@@ -1249,17 +1233,15 @@ const Dashboard = () => {
                 </Card>
               </div>
               
-              <div>
-                <div className="sticky top-8">
-                  <PreviewCard 
-                    key={`preview-${profile?.theme}-${JSON.stringify(profileForm)}`}
-                    profile={profile}
-                    profileForm={profileForm}
-                    renderSocialIcons={renderSocialIcons}
-                    themes={themes}
-                    getLinkStyle={getLinkStyle}
-                  />
-                </div>
+              <div className="md:sticky md:top-8">
+                <PreviewCard 
+                  key={`preview-${profile?.theme}-${JSON.stringify(profileForm)}`}
+                  profile={profile}
+                  profileForm={profileForm}
+                  renderSocialIcons={renderSocialIcons}
+                  themes={themes}
+                  getLinkStyle={getLinkStyle}
+                />
               </div>
             </div>
           </TabsContent>
